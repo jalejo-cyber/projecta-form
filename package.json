@@ -1,0 +1,8 @@
+{
+  "type": "module",
+  "dependencies": {
+    "pdf-lib": "^1.17.1",
+    "nodemailer": "^6.9.8",
+    "formidable": "^3.5.0"
+  }
+}
