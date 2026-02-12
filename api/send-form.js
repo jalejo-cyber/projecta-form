@@ -138,56 +138,40 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
     safeCheck("Autoritzo al Consorci per a la Formació Contínua de Catalunya a utilitzar les meves dades personals per rebre informació sobre la formació professional per a l’ocupació", fields.autoritzacioDades?.[0] === "on");
     safeCheck("Autoritzo al Consorci per a la Formació Contínua de Catalunya a que la meva imatge/veu pugui sortir en fotografies i/o vídeos publicats a la seva web i/o a les seves xarxes socials", fields.autoritzacioImatge?.[0] === "on");
 
-// ===============================
-// 📄 OBTENIR PÀGINA 1
-// ===============================
-const page = pdfDoc.getPages()[0];
-
-// ===============================
-// 🔎 LLEGIR POSICIÓ REAL DEL CAMP
-// ===============================
-let sigX = 0;
-let sigY = 0;
-let sigWidth = 200;
-let sigHeight = 80;
-
+/* ===============================
+   🔥 ELIMINAR CAMP SIGNATURA PDF
+================================= */
 try {
   const sigField = pdfForm.getField("Signatura");
-  const widget = sigField.acroField.getWidgets()[0];
-  const rect = widget.getRectangle();
-
-  sigX = rect.x;
-  sigY = rect.y;
-  sigWidth = rect.width;
-  sigHeight = rect.height;
-
-  // ELIMINAR el camp original
   pdfForm.removeField(sigField);
+} catch {}
 
-} catch (e) {
-  console.log("No s'ha pogut llegir camp Signatura");
-}
+/* ===============================
+   📄 OBTENIR PÀGINA 1
+================================= */
+const page = pdfDoc.getPages()[0];
 
-// ===============================
-// ✍️ INSERIR IMATGE SIGNATURA
-// ===============================
+/* ===============================
+   ✍️ PREPARAR SIGNATURA
+================================= */
 const sigB64 = (fields.signature?.[0] || "")
   .replace(/^data:image\/png;base64,/, "");
 
 if (sigB64) {
-  const pngImage = await pdfDoc.embedPng(sigB64);
+  const sigImg = await pdfDoc.embedPng(sigB64);
 
-  page.drawImage(pngImage, {
-    x: sigX,
-    y: sigY,
-    width: sigWidth,
-    height: sigHeight
+  // 🔧 COORDENADES REALS (ARA SÍ QUE RESPONEN)
+  page.drawImage(sigImg, {
+    x: 170,   // esquerra/dreta
+    y: 150,   // amunt/avall
+    width: 260,
+    height: 95
   });
 }
 
-// ===============================
-// 📍 LLOC I DATA (lleugerament sota)
-// ===============================
+/* ===============================
+   📍 LLOC I DATA
+================================= */
 const today = new Date();
 const formattedDate =
   `${String(today.getDate()).padStart(2,'0')}-` +
@@ -195,16 +179,17 @@ const formattedDate =
   today.getFullYear();
 
 page.drawText(`Barcelona, ${formattedDate}`, {
-  x: sigX,
-  y: sigY - 18,
+  x: 90,
+  y: 135,
   size: 11
 });
 
-// ===============================
-// 💾 GUARDAR
-// ===============================
+/* ===============================
+   💾 GUARDAR
+================================= */
 pdfForm.updateFieldAppearances();
 const pdfBytes = await pdfDoc.save();
+
 
 
 
