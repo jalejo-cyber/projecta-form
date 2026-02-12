@@ -138,27 +138,38 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
     safeCheck("Autoritzo al Consorci per a la Formació Contínua de Catalunya a utilitzar les meves dades personals per rebre informació sobre la formació professional per a l’ocupació", fields.autoritzacioDades?.[0] === "on");
     safeCheck("Autoritzo al Consorci per a la Formació Contínua de Catalunya a que la meva imatge/veu pugui sortir en fotografies i/o vídeos publicats a la seva web i/o a les seves xarxes socials", fields.autoritzacioImatge?.[0] === "on");
 
-    // =========================
-    // 🔹 SIGNATURA I DATA
-    // =========================
-
-   
-// ===============================
-// 1️⃣ OBTENIR PÀGINA PRIMER
+ // ===============================
+// 1️⃣ OBTENIR PÀGINA
 // ===============================
 const page = pdfDoc.getPages()[0];
 
 
 // ===============================
-// 2️⃣ ELIMINAR CAMP SIGNATURA
+// 2️⃣ LLEGIR POSICIÓ REAL DEL CAMP SIGNATURA
 // ===============================
+let sigX = 100;
+let sigY = 200;
+let sigWidth = 200;
+let sigHeight = 80;
+
 try {
-  pdfForm.removeField(pdfForm.getField("Signatura"));
-} catch {}
+  const sigField = pdfForm.getField("Signatura");
+  const widgets = sigField.acroField.getWidgets();
+  const rect = widgets[0].getRectangle();
+
+  sigX = rect.x;
+  sigY = rect.y;
+  sigWidth = rect.width;
+  sigHeight = rect.height;
+
+  pdfForm.removeField(sigField);
+} catch (e) {
+  console.log("No s'ha pogut llegir camp signatura");
+}
 
 
 // ===============================
-// 3️⃣ ACTUALITZAR CAMPS FORMULARI
+// 3️⃣ ACTUALITZAR CAMPS
 // ===============================
 pdfForm.updateFieldAppearances();
 
@@ -173,26 +184,26 @@ const sigImg = await pdfDoc.embedPng(sigB64);
 
 
 // ===============================
-// 5️⃣ DIBUIXAR SIGNATURA
+// 5️⃣ DIBUIXAR EXACTAMENT ON ERA EL CAMP
 // ===============================
 page.drawImage(sigImg, {
-  x: 100,
-  y: 200,
-  width: 260,
-  height: 90
+  x: sigX,
+  y: sigY,
+  width: sigWidth,
+  height: sigHeight
 });
 
 
 // ===============================
-// 6️⃣ DIBUIXAR LLOC I DATA
+// 6️⃣ LLOC I DATA (just sota la firma)
 // ===============================
 const today = new Date();
 const formattedDate = `${String(today.getDate()).padStart(2,'0')}-${String(today.getMonth()+1).padStart(2,'0')}-${today.getFullYear()}`;
 
 page.drawText(`Barcelona, ${formattedDate}`, {
-  x: 60,
-  y: 210,
-  size: 12
+  x: sigX,
+  y: sigY - 20,
+  size: 11
 });
 
 
