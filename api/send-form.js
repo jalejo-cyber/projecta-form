@@ -147,25 +147,29 @@ const page = pdfDoc.getPages()[0];
 // ===============================
 // 2️⃣ LLEGIR POSICIÓ REAL DEL CAMP SIGNATURA
 // ===============================
-let sigX = 100;
-let sigY = 200;
-let sigWidth = 200;
-let sigHeight = 80;
+const sigField = pdfForm.getField("Signatura");
+const widgets = sigField.acroField.getWidgets();
+const rect = widgets[0].getRectangle();
 
-try {
-  const sigField = pdfForm.getField("Signatura");
-  const widgets = sigField.acroField.getWidgets();
-  const rect = widgets[0].getRectangle();
-
+// Detectar si són coordenades absolutes
+if (rect.width < 0 || rect.height < 0) {
+  sigX = rect.x;
+  sigY = rect.y;
+  sigWidth = Math.abs(rect.width);
+  sigHeight = Math.abs(rect.height);
+} else {
   sigX = rect.x;
   sigY = rect.y;
   sigWidth = rect.width;
   sigHeight = rect.height;
-
-  pdfForm.removeField(sigField);
-} catch (e) {
-  console.log("No s'ha pogut llegir camp signatura");
 }
+page.drawImage(sigImg, {
+  x: sigX,
+  y: sigY,
+  width: sigWidth,
+  height: sigHeight
+});
+
 
 
 // ===============================
