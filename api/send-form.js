@@ -147,21 +147,21 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
     const page = pdfDoc.getPages()[0];
 
     page.drawImage(sigImg, {
-  x: 380,
-  y: 170,
-  width: 180,
-  height: 60
+  x: 95,
+  y: 160,
+  width: 260,
+  height: 90
 });
 
 
     const today = new Date().toLocaleDateString("ca-ES");
 
     page.drawText(`Barcelona, ${today}`, {
-  x: 380,
-  y: 150,
-  size: 11
+  x: 360,
+  y: 170,
+  size: 12
 });
-
+    
 pdfForm.updateFieldAppearances();
 
     const pdfBytes = await pdfDoc.save();
