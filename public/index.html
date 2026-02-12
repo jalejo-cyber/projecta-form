@@ -1,132 +1,251 @@
 <!DOCTYPE html>
 <html lang="ca">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sol·licitud Projecta't</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sol·licitud Projecta’t</title>
 
 <style>
-  body { font-family: Montserrat, sans-serif; background:#fff; margin:0; padding:24px; display:flex; justify-content:center; }
-  .wrap { width:100%; max-width:650px; }
-  label { font-size:13px; color:#666; display:block; margin:10px 0 6px; }
-  input, select { width:100%; height:42px; border:none; border-radius:8px; background:#e9e9e9; padding:0 12px; }
-  .row { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
-  .checkline { display:flex; align-items:center; gap:10px; margin-top:10px; }
-  .checkline input { width:16px; height:16px; }
-  #codi3Wrap { display:none; }
-  canvas { width:100%; max-width:650px; height:180px; border:1px solid #d0d0d0; border-radius:8px; }
-  .btn { background:#d6002a; color:#fff; border:none; border-radius:999px; padding:12px 18px; cursor:pointer; font-weight:600; }
-  .btn.secondary { background:#555; font-weight:500; }
-  .actions { display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; }
+body{
+  font-family: Arial, sans-serif;
+  background:#fff;
+  margin:0;
+  padding:40px 20px;
+}
+
+.container{
+  max-width:900px;
+  margin:auto;
+}
+
+h1{
+  text-align:center;
+  margin-bottom:40px;
+}
+
+.section{
+  margin-bottom:35px;
+}
+
+.section h2{
+  margin-bottom:15px;
+  font-size:18px;
+}
+
+.row{
+  display:flex;
+  gap:20px;
+  margin-bottom:15px;
+  flex-wrap:wrap;
+}
+
+input, select{
+  flex:1;
+  padding:10px;
+  border-radius:6px;
+  border:1px solid #ccc;
+  font-size:14px;
+}
+
+label{
+  font-size:14px;
+}
+
+.checkbox-group{
+  display:flex;
+  flex-wrap:wrap;
+  gap:15px;
+  margin-top:10px;
+}
+
+button{
+  padding:10px 20px;
+  border:none;
+  border-radius:20px;
+  cursor:pointer;
+  font-size:14px;
+}
+
+.btn-primary{
+  background:#d80027;
+  color:white;
+}
+
+.btn-secondary{
+  background:#555;
+  color:white;
+}
+
+.signature-box{
+  border:1px solid #ccc;
+  border-radius:8px;
+}
+
 </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <h2>Sol·licitud Projecta’t</h2>
 
-    <form id="form">
-      <div class="row">
-        <div>
-          <label>Nom</label>
-          <input name="nom" required />
-        </div>
-        <div>
-          <label>Cognoms</label>
-          <input name="cognoms" required />
-        </div>
-      </div>
+<div class="container">
 
-      <div class="row">
-        <div>
-          <label>Correu electrònic</label>
-          <input type="email" name="email" required />
-        </div>
-        <div>
-          <label>Telèfon</label>
-          <input name="telefon" required />
-        </div>
-      </div>
+<h1>Sol·licitud Projecta’t</h1>
 
-      <div class="row">
-        <div>
-          <label>Data de naixement</label>
-          <input type="date" name="dataNaixement" required />
-        </div>
-        <div>
-          <label>DNI</label>
-          <input name="dni" required />
-        </div>
-      </div>
+<form id="projectaForm">
 
-      <label>Gènere</label>
-      <select name="genere">
-        <option value="Dona">Dona</option>
-        <option value="Home">Home</option>
-        <option value="No binari">No binari</option>
-      </select>
+<!-- DADES PERSONALS -->
+<div class="section">
+<h2>Dades personals</h2>
 
-      <div class="checkline">
-        <input type="checkbox" id="ocupat" />
-        <label for="ocupat" style="margin:0;">Ocupat/ada</label>
-      </div>
+<div class="row">
+<input name="nom" placeholder="Nom" required>
+<input name="cognoms" placeholder="Cognoms" required>
+</div>
 
-      <div id="codi3Wrap">
-        <label>Codi3</label>
-        <select name="codi3">
-          <option value="">Selecciona</option>
-          <option value="RG">RG</option><option value="FD">FD</option><option value="RE">RE</option>
-          <option value="AGP">AGP</option><option value="AGA">AGA</option><option value="AU">AU</option>
-          <option value="TM">TM</option><option value="CP">CP</option><option value="EH">EH</option>
-          <option value="DF">DF</option><option value="RLE">RLE</option><option value="CESS">CESS</option>
-          <option value="AP">AP</option><option value="FDI">FDI</option>
-        </select>
-      </div>
+<div class="row">
+<input type="email" name="email" placeholder="Correu electrònic" required>
+<input name="telefon" placeholder="Telèfon" required>
+</div>
 
-      <h3 style="margin-top:18px;">Signatura</h3>
-      <canvas id="sig" width="650" height="180"></canvas>
+<div class="row">
+<input type="date" name="dataNaixement" required>
+<input name="dni" placeholder="DNI" required>
+</div>
 
-      <div class="actions">
-        <button class="btn secondary" type="button" id="clear">Esborrar signatura</button>
-        <button class="btn" type="submit">Enviar</button>
-      </div>
-    </form>
-  </div>
+<div class="row">
+<select name="genere">
+<option value="">Selecciona gènere</option>
+<option value="Home">Home</option>
+<option value="Dona">Dona</option>
+<option value="No binari">No binari</option>
+</select>
+</div>
+</div>
 
-<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
+<!-- SITUACIÓ LABORAL -->
+<div class="section">
+<h2>Situació laboral</h2>
+
+<label>
+<input type="checkbox" id="ocupatCheck" name="ocupat" value="true">
+Ocupat/ada
+</label>
+
+<div class="row" id="codi3Row" style="display:none;">
+<select name="codi3">
+<option value="">Selecciona règim</option>
+<option value="RG">RG – Règim General</option>
+<option value="AUT">AUT – Autònom/a</option>
+<option value="MAR">MAR – Règim del Mar</option>
+<option value="AGR">AGR – Règim Agrari</option>
+<option value="ALT">ALT – Altres</option>
+</select>
+</div>
+
+</div>
+
+<!-- EMPRESA (SEMPRE VISIBLE) -->
+<div class="section">
+<h2>Dades empresa</h2>
+
+<div class="row">
+<input name="raoSocial" placeholder="Raó social">
+<input name="cif" placeholder="CIF empresa">
+</div>
+
+<div class="row">
+<input name="nassEmpresa" placeholder="Núm. Seguretat Social empresa">
+<input name="adrecaEmpresa" placeholder="Adreça centre de treball">
+</div>
+
+<div class="row">
+<input name="poblacioEmpresa" placeholder="Població empresa">
+<input name="comarcaEmpresa" placeholder="Comarca empresa">
+<input name="cpEmpresa" placeholder="Codi postal empresa">
+</div>
+
+<div class="row">
+<select name="midaEmpresa">
+<option value="">Mida empresa</option>
+<option value="Microempresa">Microempresa (1-9)</option>
+<option value="Petita">Petita (10-49)</option>
+<option value="Mitjana">Mitjana (50-249)</option>
+<option value="Gran">Gran (250+)</option>
+</select>
+</div>
+
+</div>
+
+<!-- COL·LECTIUS -->
+<div class="section">
+<h2>Col·lectius especials</h2>
+
+<div class="checkbox-group">
+<label><input type="checkbox" name="erto" value="true"> Afectada ERTO</label>
+<label><input type="checkbox" name="cpn" value="true"> Cuidadora no professional</label>
+<label><input type="checkbox" name="diversitat" value="true"> Diversitat funcional</label>
+<label><input type="checkbox" name="violencia" value="true"> Violència de gènere</label>
+<label><input type="checkbox" name="terrorisme" value="true"> Víctima de terrorisme</label>
+</div>
+</div>
+
+<!-- SIGNATURA -->
+<div class="section">
+<h2>Signatura</h2>
+
+<canvas id="signaturePad" class="signature-box" width="800" height="200"></canvas>
+
+<br><br>
+
+<button type="button" class="btn-secondary" onclick="clearSignature()">Esborrar signatura</button>
+<button type="submit" class="btn-primary">Enviar</button>
+
+</div>
+
+</form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+
 <script>
-  const canvas = document.getElementById('sig');
-  const pad = new SignaturePad(canvas, { minWidth: 1, maxWidth: 3 });
 
-  document.getElementById('clear').onclick = () => pad.clear();
+const canvas = document.getElementById("signaturePad");
+const signaturePad = new SignaturePad(canvas);
 
-  document.getElementById('ocupat').addEventListener('change', (e) => {
-    document.getElementById('codi3Wrap').style.display = e.target.checked ? 'block' : 'none';
+function clearSignature(){
+  signaturePad.clear();
+}
+
+document.getElementById("ocupatCheck").addEventListener("change", function(){
+  document.getElementById("codi3Row").style.display = this.checked ? "flex" : "none";
+});
+
+document.getElementById("projectaForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+
+  if(signaturePad.isEmpty()){
+    alert("Cal signar abans d'enviar.");
+    return;
+  }
+
+  const formData = new FormData(this);
+  formData.append("signature", signaturePad.toDataURL());
+
+  const res = await fetch("/api/send-form", {
+    method: "POST",
+    body: formData
   });
 
-  document.getElementById('form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (pad.isEmpty()) return alert("Has de signar el formulari");
+  if(res.ok){
+    alert("Sol·licitud enviada correctament!");
+    this.reset();
+    signaturePad.clear();
+    document.getElementById("codi3Row").style.display = "none";
+  } else {
+    alert("Error en l'enviament.");
+  }
+});
 
-    const fd = new FormData(e.target);
-    fd.append("ocupat", String(document.getElementById('ocupat').checked));
-    fd.append("signature", pad.toDataURL("image/png"));
-
-    const r = await fetch("/api/send-form", { method: "POST", body: fd });
-    const data = await r.json().catch(()=> ({}));
-
-    if (!r.ok) {
-      alert("Error enviant: " + (data.error || "Torna-ho a provar."));
-      return;
-    }
-
-    alert("Enviat correctament!");
-    e.target.reset();
-    pad.clear();
-    document.getElementById('codi3Wrap').style.display = "none";
-  });
 </script>
+
 </body>
 </html>
