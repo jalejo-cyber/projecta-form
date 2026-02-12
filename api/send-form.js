@@ -93,7 +93,8 @@ safeSetText("Data de naixament", formattedDate);
     // =========================
 
     safeSetText("Rao social", fields.raoSocial?.[0]);
-    safeSetText("CIF_empresa", fields.cif?.[0]);
+    console.log("CIF rebut:", fields.cif);
+safeSetText("CIF_empresa", fields.cif?.[0]);
     safeSetText("Núm. d’inscripció a la Seguretat Social", fields.nassEmpresa?.[0]);
     safeSetText("Adreça del centre de treball", fields.adrecaEmpresa?.[0]);
     safeSetText("Comarca empresa", fields.comarcaEmpresa?.[0]);
