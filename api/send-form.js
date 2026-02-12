@@ -145,6 +145,10 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
     const sigB64 = (fields.signature?.[0] || "").replace(/^data:image\/png;base64,/, "");
     const sigImg = await pdfDoc.embedPng(sigB64);
     const page = pdfDoc.getPages()[0];
+    const { width, height } = page.getSize();
+console.log("PAGE WIDTH:", width);
+console.log("PAGE HEIGHT:", height);
+
 
     page.drawImage(sigImg, {
   x: 100,
