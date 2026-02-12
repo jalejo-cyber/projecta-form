@@ -138,40 +138,41 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
     safeCheck("Autoritzo al Consorci per a la Formació Contínua de Catalunya a utilitzar les meves dades personals per rebre informació sobre la formació professional per a l’ocupació", fields.autoritzacioDades?.[0] === "on");
     safeCheck("Autoritzo al Consorci per a la Formació Contínua de Catalunya a que la meva imatge/veu pugui sortir en fotografies i/o vídeos publicats a la seva web i/o a les seves xarxes socials", fields.autoritzacioImatge?.[0] === "on");
 
-/* ===============================
-   🔥 ELIMINAR CAMP SIGNATURA PDF
-================================= */
+// ===============================
+// 📄 PÀGINA 1
+// ===============================
+const page = pdfDoc.getPages()[0];
+
+// ===============================
+// 🔥 ELIMINAR CAMP SIGNATURA DEL PDF
+// ===============================
 try {
   const sigField = pdfForm.getField("Signatura");
   pdfForm.removeField(sigField);
 } catch {}
 
-/* ===============================
-   📄 OBTENIR PÀGINA 1
-================================= */
-const page = pdfDoc.getPages()[0];
-
-/* ===============================
-   ✍️ PREPARAR SIGNATURA
-================================= */
+// ===============================
+// ✍️ PREPARAR IMATGE SIGNATURA
+// ===============================
 const sigB64 = (fields.signature?.[0] || "")
   .replace(/^data:image\/png;base64,/, "");
 
 if (sigB64) {
+
   const sigImg = await pdfDoc.embedPng(sigB64);
 
-  // 🔧 COORDENADES REALS (ARA SÍ QUE RESPONEN)
+  // ⚠️ Coordenades REALES (aquestes sí funcionaran)
   page.drawImage(sigImg, {
-    x: 170,   // esquerra/dreta
-    y: 150,   // amunt/avall
-    width: 260,
-    height: 95
+    x: 185,
+    y: 170,
+    width: 240,
+    height: 90
   });
 }
 
-/* ===============================
-   📍 LLOC I DATA
-================================= */
+// ===============================
+// 📍 LLOC I DATA
+// ===============================
 const today = new Date();
 const formattedDate =
   `${String(today.getDate()).padStart(2,'0')}-` +
@@ -180,15 +181,15 @@ const formattedDate =
 
 page.drawText(`Barcelona, ${formattedDate}`, {
   x: 90,
-  y: 135,
+  y: 150,
   size: 11
 });
 
-/* ===============================
-   💾 GUARDAR
-================================= */
-pdfForm.updateFieldAppearances();
+// ===============================
+// 💾 GUARDAR
+// ===============================
 const pdfBytes = await pdfDoc.save();
+
 
 
 
