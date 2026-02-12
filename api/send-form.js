@@ -139,32 +139,27 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
     safeCheck("Autoritzo al Consorci per a la Formació Contínua de Catalunya a que la meva imatge/veu pugui sortir en fotografies i/o vídeos publicats a la seva web i/o a les seves xarxes socials", fields.autoritzacioImatge?.[0] === "on");
 
 // ===============================
-// 📄 PÀGINA 1
+// 📄 OBTENIR PÀGINA 1
 // ===============================
 const page = pdfDoc.getPages()[0];
 
 // ===============================
-// 🔥 ELIMINAR CAMP SIGNATURA DEL PDF
+// 🔥 APLANAR EL PDF (IMPORTANTÍSSIM)
 // ===============================
-try {
-  const sigField = pdfForm.getField("Signatura");
-  pdfForm.removeField(sigField);
-} catch {}
+pdfForm.flatten();  // elimina tots els camps interactius
 
 // ===============================
-// ✍️ PREPARAR IMATGE SIGNATURA
+// ✍️ PREPARAR SIGNATURA
 // ===============================
 const sigB64 = (fields.signature?.[0] || "")
   .replace(/^data:image\/png;base64,/, "");
 
 if (sigB64) {
-
   const sigImg = await pdfDoc.embedPng(sigB64);
 
-  // ⚠️ Coordenades REALES (aquestes sí funcionaran)
   page.drawImage(sigImg, {
     x: 185,
-    y: 170,
+    y: 165,
     width: 240,
     height: 90
   });
@@ -181,7 +176,7 @@ const formattedDate =
 
 page.drawText(`Barcelona, ${formattedDate}`, {
   x: 90,
-  y: 150,
+  y: 145,
   size: 11
 });
 
