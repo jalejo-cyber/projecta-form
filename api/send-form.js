@@ -144,34 +144,65 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
 
    
 
-    const sigB64 = (fields.signature?.[0] || "").replace(/^data:image\/png;base64,/, "");
-const sigImg = await pdfDoc.embedPng(sigB64);
-
-const page = pdfDoc.getPages()[0];
-
-// SIGNATURA (rectangle vermell real)
-page.drawImage(sigImg, {
-  x: 190,      // mou esquerra/dreta (+ = dreta)
-  y: 165,      // mou amunt/avall (+ = amunt)
-  width: 230,
-  height: 90
-});
-
-// LLOC I DATA (rectangle verd)
-const today = new Date();
-const formattedDate = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`;
-
-page.drawText(`Barcelona, ${formattedDate}`, {
-  x: 75,
-  y: 145,
-  size: 11
-});
+// ===============================
+// 🔴 ELIMINAR CAMP SIGNATURA PDF
+// ===============================
+try {
+  const signatureField = pdfForm.getSignature("Signatura");
+  pdfForm.removeField(signatureField);
+} catch (e) {
+  console.log("No s'ha pogut eliminar el camp de signatura (potser ja no existeix)");
+}
 
 
-    
+// ===============================
+// ✍️ DIBUIXAR SIGNATURA REAL
+// ===============================
+const sigB64 = (fields.signature?.[0] || "")
+  .replace(/^data:image\/png;base64,/, "");
+
+if (sigB64) {
+
+  const sigImg = await pdfDoc.embedPng(sigB64);
+  const page = pdfDoc.getPages()[0];
+
+  // 📄 Dimensions pàgina (per si vols tornar a comprovar)
+  const { width, height } = page.getSize();
+  console.log("PAGE WIDTH:", width);
+  console.log("PAGE HEIGHT:", height);
+
+  // 🔴 SIGNATURA (rectangle vermell definitiu)
+  page.drawImage(sigImg, {
+    x: 210,      // ← ajustat més a la dreta
+    y: 155,      // ← ajustat una mica més avall
+    width: 220,
+    height: 80
+  });
+
+  // 🟢 LLOC I DATA (rectangle verd definitiu)
+  const today = new Date();
+  const formattedDate = `${String(today.getDate()).padStart(2,'0')}-${String(today.getMonth()+1).padStart(2,'0')}-${today.getFullYear()}`;
+
+  page.drawText(`Barcelona, ${formattedDate}`, {
+    x: 90,
+    y: 135,
+    size: 11
+  });
+
+}
+
+
+// ===============================
+// 🔄 ACTUALITZAR CAMPS RESTANTS
+// ===============================
 pdfForm.updateFieldAppearances();
 
-    const pdfBytes = await pdfDoc.save();
+
+// ===============================
+// 💾 GUARDAR PDF
+// ===============================
+const pdfBytes = await pdfDoc.save();
+
 
     // =========================
     // 🔹 EMAIL
