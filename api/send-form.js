@@ -139,23 +139,26 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
     safeCheck("Autoritzo al Consorci per a la Formació Contínua de Catalunya a que la meva imatge/veu pugui sortir en fotografies i/o vídeos publicats a la seva web i/o a les seves xarxes socials", fields.autoritzacioImatge?.[0] === "on");
 
 // ===============================
-// 📄 OBTENIR PÀGINA 1
+// 1️⃣ APLANAR FORMULARI
 // ===============================
-const page = pdfDoc.getPages()[0];
+pdfForm.flatten();
+
+// Guardem temporalment
+const flattenedBytes = await pdfDoc.save();
+
+// Tornem a carregar el PDF ja aplanat
+const finalPdfDoc = await PDFDocument.load(flattenedBytes);
+const page = finalPdfDoc.getPages()[0];
+
 
 // ===============================
-// 🔥 APLANAR EL PDF (IMPORTANTÍSSIM)
-// ===============================
-pdfForm.flatten();  // elimina tots els camps interactius
-
-// ===============================
-// ✍️ PREPARAR SIGNATURA
+// 2️⃣ INSERIR SIGNATURA (PER SOBRE DE TOT)
 // ===============================
 const sigB64 = (fields.signature?.[0] || "")
   .replace(/^data:image\/png;base64,/, "");
 
 if (sigB64) {
-  const sigImg = await pdfDoc.embedPng(sigB64);
+  const sigImg = await finalPdfDoc.embedPng(sigB64);
 
   page.drawImage(sigImg, {
     x: 185,
@@ -165,8 +168,9 @@ if (sigB64) {
   });
 }
 
+
 // ===============================
-// 📍 LLOC I DATA
+// 3️⃣ LLOC I DATA
 // ===============================
 const today = new Date();
 const formattedDate =
@@ -180,10 +184,11 @@ page.drawText(`Barcelona, ${formattedDate}`, {
   size: 11
 });
 
+
 // ===============================
-// 💾 GUARDAR
+// 💾 GUARDAR DEFINITIU
 // ===============================
-const pdfBytes = await pdfDoc.save();
+const pdfBytes = await finalPdfDoc.save();
 
 
 
