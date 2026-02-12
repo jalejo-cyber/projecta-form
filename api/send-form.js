@@ -146,17 +146,17 @@ safeSetText("Data de naixament", formattedDate);
     const page = pdfDoc.getPages()[0];
 
     page.drawImage(sigImg, {
-  x: 260,
-  y: 175,
+  x: 380,
+  y: 170,
   width: 180,
-  height: 65
+  height: 60
 });
 
 
     const today = new Date().toLocaleDateString("ca-ES");
 
     page.drawText(`Barcelona, ${today}`, {
-  x: 260,
+  x: 380,
   y: 150,
   size: 11
 });
