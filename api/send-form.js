@@ -142,31 +142,28 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
     // 🔹 SIGNATURA I DATA
     // =========================
 
+   
+
     const sigB64 = (fields.signature?.[0] || "").replace(/^data:image\/png;base64,/, "");
-    const sigImg = await pdfDoc.embedPng(sigB64);
-    const page = pdfDoc.getPages()[0];
-    
-
-
-    const sigB64 = (fields.signature?.[0] || "")
-  .replace(/^data:image\/png;base64,/, "");
-
 const sigImg = await pdfDoc.embedPng(sigB64);
 
-const signatureField = pdfForm.getSignature("Signatura");
+const page = pdfDoc.getPages()[0];
 
-// 👇 Això posa la imatge EXACTAMENT dins del camp del PDF
-signatureField.setImage(sigImg);
+// SIGNATURA (rectangle vermell real)
+page.drawImage(sigImg, {
+  x: 190,      // mou esquerra/dreta (+ = dreta)
+  y: 165,      // mou amunt/avall (+ = amunt)
+  width: 230,
+  height: 90
+});
 
+// LLOC I DATA (rectangle verd)
+const today = new Date();
+const formattedDate = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`;
 
-
-
-
-    const today = new Date().toLocaleDateString("ca-ES");
-
-    page.drawText(`Barcelona, ${today}`, {
-  x: 95,
-  y: 150,
+page.drawText(`Barcelona, ${formattedDate}`, {
+  x: 75,
+  y: 145,
   size: 11
 });
 
