@@ -27,18 +27,47 @@ export default async function handler(req, res) {
       try { if (checked) pdfForm.getCheckBox(fieldName).check(); } catch {}
     };
 
-    safeSetText("Nom", fields.nom?.[0]);
-    safeSetText("Cognoms", fields.cognoms?.[0]);
-    safeSetText("Correu electrònic", fields.email?.[0]);
+    // 🔹 DADES PARTICIPANT
+    safeSetText("Nom participant", fields.nom?.[0]);
+    safeSetText("Cognoms participant", fields.cognoms?.[0]);
+    safeSetText("Correu electrònic participant", fields.email?.[0]);
     safeSetText("Telèfon", fields.telefon?.[0]);
     safeSetText("Document d'identitat", fields.dni?.[0]);
-    safeSetText("Data de naixement", fields.dataNaixement?.[0]);
+    safeSetText("Data de naixament", fields.dataNaixement?.[0]);
 
     safeSelect("Gènere", fields.genere?.[0]);
 
+    // 🔹 SITUACIÓ LABORAL
     const ocupat = fields.ocupat?.[0] === "true";
-    safeCheck("Ocupat/ada", ocupat);
-    if (ocupat) safeSelect("Codi3", fields.codi3?.[0]);
+    safeCheck("Ocupatada Consigneuhi codi3", ocupat);
+
+    if (ocupat && fields.codi3?.[0]) {
+      safeSelect("Consigna", fields.codi3?.[0]);
+    }
+
+    // 🔹 EMPRESA
+    safeSetText("Rao social", fields.raoSocial?.[0]);
+    safeSetText("CIF_empresa", fields.cif?.[0]);
+    safeSetText("Núm. d’inscripció a la Seguretat Social", fields.nassEmpresa?.[0]);
+    safeSetText("Adreça del centre de treball", fields.adrecaEmpresa?.[0]);
+    safeSetText("Comarca empresa", fields.comarcaEmpresa?.[0]);
+    safeSetText("Població empresa", fields.poblacioEmpresa?.[0]);
+    safeSetText("Codi postal empresa", fields.cpEmpresa?.[0]);
+
+    safeSelect("Mida de l'empresa", fields.midaEmpresa?.[0]);
+
+    // 🔹 CHECKBOXES ESPECIALS
+    safeCheck("Afectatada ERTO", fields.erto?.[0] === "true");
+    safeCheck("Cuidadora no professionalCPN", fields.cpn?.[0] === "true");
+    safeCheck("Diversitat funcional", fields.diversitat?.[0] === "true");
+    safeCheck("Violència de gènere", fields.violencia?.[0] === "true");
+    safeCheck("Víctima de terrorisme", fields.terrorisme?.[0] === "true");
+
+    // 🔹 SIGNATURA (camp real del PDF)
+    try {
+      const signatureField = pdfForm.getSignature("Signatura");
+      signatureField.enableReadOnly();
+    } catch {}
 
     const sigB64 = (fields.signature?.[0] || "").replace(/^data:image\/png;base64,/, "");
     const sigImg = await pdfDoc.embedPng(sigB64);
