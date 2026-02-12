@@ -20,24 +20,47 @@ export default async function handler(req, res) {
     const safeSetText = (fieldName, value) => {
       try { pdfForm.getTextField(fieldName).setText(value ?? ""); } catch {}
     };
+
     const safeSelect = (fieldName, value) => {
       try { pdfForm.getDropdown(fieldName).select(value ?? ""); } catch {}
     };
+
     const safeCheck = (fieldName, checked) => {
       try { if (checked) pdfForm.getCheckBox(fieldName).check(); } catch {}
     };
 
-    // 🔹 DADES PARTICIPANT
+    // =========================
+    // 🔹 DADES PERSONALS
+    // =========================
+
     safeSetText("Nom participant", fields.nom?.[0]);
     safeSetText("Cognoms participant", fields.cognoms?.[0]);
-    safeSetText("Correu electrònic participant", fields.email?.[0]);
-    safeSetText("Telèfon", fields.telefon?.[0]);
+    safeSetText("Nom sentitat participant", fields.nomSentit?.[0]);
     safeSetText("Document d'identitat", fields.dni?.[0]);
     safeSetText("Data de naixament", fields.dataNaixement?.[0]);
+    safeSetText("País d'origen", fields.paisOrigen?.[0]);
+    safeSetText("NASS", fields.nass?.[0]);
+    safeSetText("Adreça participant", fields.adrecaParticipant?.[0]);
+    safeSetText("Comarca participant", fields.comarcaParticipant?.[0]);
+    safeSetText("Població participant", fields.poblacioParticipant?.[0]);
+    safeSetText("Codi postal particiapnt", fields.cpParticipant?.[0]);
+    safeSetText("Correu electrònic participant", fields.email?.[0]);
+    safeSetText("Telèfon", fields.telefon?.[0]);
 
     safeSelect("Gènere", fields.genere?.[0]);
 
+    // =========================
+    // 🔹 DADES PROFESSIONALS
+    // =========================
+
+    safeSelect("Interès a participar a l'acció formativa", fields.interes?.[0]);
+    safeSelect("Estudis", fields.estudis?.[0]);
+    safeSelect("Categoria professional (només persones ocuapdes)", fields.categoriaProfessional?.[0]);
+
+    // =========================
     // 🔹 SITUACIÓ LABORAL
+    // =========================
+
     const ocupat = fields.ocupat?.[0] === "true";
     safeCheck("Ocupatada Consigneuhi codi3", ocupat);
 
@@ -45,9 +68,23 @@ export default async function handler(req, res) {
       safeSelect("Consigna", fields.codi3?.[0]);
     }
 
+    safeCheck("Afectatada ERTO", fields.erto?.[0] === "true");
+    safeCheck("Cuidadora no professionalCPN", fields.cpn?.[0] === "true");
+
+    // =========================
+    // 🔹 SITUACIONS ESPECÍFIQUES
+    // =========================
+
+    safeCheck("Diversitat funcional", fields.diversitat?.[0] === "true");
+    safeCheck("Violència de gènere", fields.violencia?.[0] === "true");
+    safeCheck("Víctima de terrorisme", fields.terrorisme?.[0] === "true");
+
+    // =========================
     // 🔹 EMPRESA
+    // =========================
+
     safeSetText("Rao social", fields.raoSocial?.[0]);
-    safeSetText("CIF_empresa", fields.cif?.[0]);
+    safeSetText("CIF", fields.cif?.[0]);
     safeSetText("Núm. d’inscripció a la Seguretat Social", fields.nassEmpresa?.[0]);
     safeSetText("Adreça del centre de treball", fields.adrecaEmpresa?.[0]);
     safeSetText("Comarca empresa", fields.comarcaEmpresa?.[0]);
@@ -56,40 +93,69 @@ export default async function handler(req, res) {
 
     safeSelect("Mida de l'empresa", fields.midaEmpresa?.[0]);
 
-    // 🔹 CHECKBOXES ESPECIALS
-    safeCheck("Afectatada ERTO", fields.erto?.[0] === "true");
-    safeCheck("Cuidadora no professionalCPN", fields.cpn?.[0] === "true");
-    safeCheck("Diversitat funcional", fields.diversitat?.[0] === "true");
-    safeCheck("Violència de gènere", fields.violencia?.[0] === "true");
-    safeCheck("Víctima de terrorisme", fields.terrorisme?.[0] === "true");
+    // =========================
+    // 🔹 DIFUSIÓ
+    // =========================
 
-    // 🔹 SIGNATURA (camp real del PDF)
-    try {
-      const signatureField = pdfForm.getSignature("Signatura");
-      signatureField.enableReadOnly();
-    } catch {}
+    const difusioMap = {
+      OT: "Oficina de Treball",
+      WebConsorci: "Web del Consorci conforcatgencatcat",
+      EntitatFormacio: "Entitat de formació",
+      Agents: "Agents econòmics i socials",
+      Projectat: "Projectat orientació professional",
+      SOC: "Cercador de cursos del SOC",
+      WebFPG: "Web fpgencatcat",
+      LinkedIn: "LinkedIn",
+      EmpresaDifusio: "Empresa",
+      TwitterConsorci: "Twitter (X) del Consorci @fpo_continua",
+      TwitterOcupacio: "Twitter (X) d'Ocupació @ocupaciocat",
+      Amics: "Amics, amigues o familiars",
+      Premsa: "Premsa, ràdio, televisió (mitjans comunicació)",
+      AltresDifusio: "Altres. Quins?"
+    };
+
+    Object.keys(difusioMap).forEach(key => {
+      if (fields[key]?.[0] === "true") {
+        safeCheck(difusioMap[key], true);
+      }
+    });
+
+    // =========================
+    // 🔹 DECLARACIONS
+    // =========================
+
+    safeCheck("Declaro que he estat informatada per part de l", fields.declaro?.[0] === "on");
+    safeCheck("Autoritzo al Consorci per a la Formació Contínua de Catalunya a utilitzar les meves dades personals per rebre informació sobre la formació professional per a l’ocupació", fields.autoritzacioDades?.[0] === "on");
+    safeCheck("Autoritzo al Consorci per a la Formació Contínua de Catalunya a que la meva imatge/veu pugui sortir en fotografies i/o vídeos publicats a la seva web i/o a les seves xarxes socials", fields.autoritzacioImatge?.[0] === "on");
+
+    // =========================
+    // 🔹 SIGNATURA I DATA
+    // =========================
 
     const sigB64 = (fields.signature?.[0] || "").replace(/^data:image\/png;base64,/, "");
     const sigImg = await pdfDoc.embedPng(sigB64);
-
     const page = pdfDoc.getPages()[0];
 
     page.drawImage(sigImg, {
-      x: 60,
-      y: 125,
-      width: 220,
-      height: 85
+      x: 330,
+      y: 160,
+      width: 200,
+      height: 70
     });
 
     const today = new Date().toLocaleDateString("ca-ES");
 
     page.drawText(`Barcelona, ${today}`, {
-      x: 60,
-      y: 110,
+      x: 330,
+      y: 140,
       size: 11
     });
 
     const pdfBytes = await pdfDoc.save();
+
+    // =========================
+    // 🔹 EMAIL
+    // =========================
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
