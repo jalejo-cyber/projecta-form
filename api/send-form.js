@@ -147,8 +147,8 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
     const page = pdfDoc.getPages()[0];
 
     page.drawImage(sigImg, {
-  x: 80,
-  y: 215,
+  x: 100,
+  y: 200,
   width: 260,
   height: 90
 });
@@ -157,8 +157,8 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
     const today = new Date().toLocaleDateString("ca-ES");
 
     page.drawText(`Barcelona, ${today}`, {
-  x: 40,
-  y: 200,
+  x: 60,
+  y: 210,
   size: 12
 });
     
