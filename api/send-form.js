@@ -144,23 +144,49 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
 const page = pdfDoc.getPages()[0];
 
 // ===============================
-// ✍️ SIGNATURA (usant el camp real del PDF)
+// 🔎 LLEGIR POSICIÓ REAL DEL CAMP
+// ===============================
+let sigX = 0;
+let sigY = 0;
+let sigWidth = 200;
+let sigHeight = 80;
+
+try {
+  const sigField = pdfForm.getField("Signatura");
+  const widget = sigField.acroField.getWidgets()[0];
+  const rect = widget.getRectangle();
+
+  sigX = rect.x;
+  sigY = rect.y;
+  sigWidth = rect.width;
+  sigHeight = rect.height;
+
+  // ELIMINAR el camp original
+  pdfForm.removeField(sigField);
+
+} catch (e) {
+  console.log("No s'ha pogut llegir camp Signatura");
+}
+
+// ===============================
+// ✍️ INSERIR IMATGE SIGNATURA
 // ===============================
 const sigB64 = (fields.signature?.[0] || "")
   .replace(/^data:image\/png;base64,/, "");
 
 if (sigB64) {
-  try {
-    const signatureField = pdfForm.getSignature("Signatura");
-    const pngImage = await pdfDoc.embedPng(sigB64);
-    signatureField.setImage(pngImage);
-  } catch (e) {
-    console.log("No s'ha pogut inserir la signatura al camp");
-  }
+  const pngImage = await pdfDoc.embedPng(sigB64);
+
+  page.drawImage(pngImage, {
+    x: sigX,
+    y: sigY,
+    width: sigWidth,
+    height: sigHeight
+  });
 }
 
 // ===============================
-// 📍 LLOC I DATA
+// 📍 LLOC I DATA (lleugerament sota)
 // ===============================
 const today = new Date();
 const formattedDate =
@@ -169,8 +195,8 @@ const formattedDate =
   today.getFullYear();
 
 page.drawText(`Barcelona, ${formattedDate}`, {
-  x: 90,   // ajustable si cal
-  y: 140,  // ajustable si cal
+  x: sigX,
+  y: sigY - 18,
   size: 11
 });
 
@@ -179,6 +205,7 @@ page.drawText(`Barcelona, ${formattedDate}`, {
 // ===============================
 pdfForm.updateFieldAppearances();
 const pdfBytes = await pdfDoc.save();
+
 
 
 
