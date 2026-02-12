@@ -151,6 +151,22 @@ try {
   pdfForm.removeField(pdfForm.getField("Signatura"));
 } catch {}
 
+    const { width, height } = page.getSize();
+
+// Dibuixa una creu al centre real de la pàgina
+page.drawLine({
+  start: { x: width / 2 - 20, y: height / 2 },
+  end: { x: width / 2 + 20, y: height / 2 },
+  thickness: 2
+});
+
+page.drawLine({
+  start: { x: width / 2, y: height / 2 - 20 },
+  end: { x: width / 2, y: height / 2 + 20 },
+  thickness: 2
+});
+
+
 
 
 // ===============================
