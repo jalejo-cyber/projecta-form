@@ -153,61 +153,34 @@ try {
 
     const { width, height } = page.getSize();
 
-// Dibuixa una creu al centre real de la pàgina
-page.drawLine({
-  start: { x: width / 2 - 20, y: height / 2 },
-  end: { x: width / 2 + 20, y: height / 2 },
-  thickness: 2
-});
+// 1️⃣ Actualitzar camps de formulari PRIMER
+pdfForm.updateFieldAppearances();
 
-page.drawLine({
-  start: { x: width / 2, y: height / 2 - 20 },
-  end: { x: width / 2, y: height / 2 + 20 },
-  thickness: 2
-});
+// 2️⃣ Preparar signatura
+const sigB64 = (fields.signature?.[0] || "")
+  .replace(/^data:image\/png;base64,/, "");
 
-page.drawRectangle({
-  x: 200,
-  y: 400,
-  width: 200,
-  height: 200,
-  borderWidth: 10
-});
-
-
-
-// ===============================
-// ✍️ DIBUIXAR SIGNATURA REAL
-// ===============================
-const sigB64 = (fields.signature?.[0] || "").replace(/^data:image\/png;base64,/, "");
 const sigImg = await pdfDoc.embedPng(sigB64);
 
 const page = pdfDoc.getPages()[0];
 
+// 3️⃣ Dibuixar signatura
 page.drawImage(sigImg, {
-  x: 190,
-  y: 165,
-  width: 230,
+  x: 100,
+  y: 200,
+  width: 260,
   height: 90
 });
 
-  // 🟢 LLOC I DATA (rectangle verd definitiu)
-  const today = new Date();
-  const formattedDate = `${String(today.getDate()).padStart(2,'0')}-${String(today.getMonth()+1).padStart(2,'0')}-${today.getFullYear()}`;
+// 4️⃣ Dibuixar lloc i data
+const today = new Date().toLocaleDateString("ca-ES");
 
-  page.drawText(`Barcelona, ${formattedDate}`, {
-    x: 90,
-    y: 135,
-    size: 11
-  });
+page.drawText(`Barcelona, ${today}`, {
+  x: 60,
+  y: 210,
+  size: 12
+});
 
-}
-
-
-// ===============================
-// 🔄 ACTUALITZAR CAMPS RESTANTS
-// ===============================
-pdfForm.updateFieldAppearances();
 
 
 // ===============================
