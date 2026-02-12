@@ -139,53 +139,38 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
     safeCheck("Autoritzo al Consorci per a la Formació Contínua de Catalunya a que la meva imatge/veu pugui sortir en fotografies i/o vídeos publicats a la seva web i/o a les seves xarxes socials", fields.autoritzacioImatge?.[0] === "on");
 
 // ===============================
-// 🔥 ELIMINAR CAMP SIGNATURA PDF
-// ===============================
-try {
-  const sigField = pdfForm.getField("Signatura");
-  pdfForm.removeField(sigField);
-} catch {}
-
-// ===============================
 // 📄 OBTENIR PÀGINA 1
 // ===============================
 const page = pdfDoc.getPages()[0];
 
 // ===============================
-// ✍️ PREPARAR SIGNATURA
+// ✍️ SIGNATURA (usant el camp real del PDF)
 // ===============================
 const sigB64 = (fields.signature?.[0] || "")
   .replace(/^data:image\/png;base64,/, "");
 
-const sigImg = await pdfDoc.embedPng(sigB64);
-
-// ===============================
-// 🎯 COORDENADES REALS (AJUSTABLES)
-// ===============================
-
-// Prova aquests valors:
-const sigX = 185;
-const sigY = 160;
-const sigWidth = 240;
-const sigHeight = 90;
-
-// Dibuixar firma
-page.drawImage(sigImg, {
-  x: sigX,
-  y: sigY,
-  width: sigWidth,
-  height: sigHeight
-});
+if (sigB64) {
+  try {
+    const signatureField = pdfForm.getSignature("Signatura");
+    const pngImage = await pdfDoc.embedPng(sigB64);
+    signatureField.setImage(pngImage);
+  } catch (e) {
+    console.log("No s'ha pogut inserir la signatura al camp");
+  }
+}
 
 // ===============================
 // 📍 LLOC I DATA
 // ===============================
 const today = new Date();
-const formattedDate = `${String(today.getDate()).padStart(2,'0')}-${String(today.getMonth()+1).padStart(2,'0')}-${today.getFullYear()}`;
+const formattedDate =
+  `${String(today.getDate()).padStart(2,'0')}-` +
+  `${String(today.getMonth()+1).padStart(2,'0')}-` +
+  today.getFullYear();
 
 page.drawText(`Barcelona, ${formattedDate}`, {
-  x: 75,
-  y: 145,
+  x: 90,   // ajustable si cal
+  y: 140,  // ajustable si cal
   size: 11
 });
 
