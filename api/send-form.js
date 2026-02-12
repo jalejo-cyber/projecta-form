@@ -148,18 +148,25 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
     
 
 
-    const signatureField = pdfForm.getSignature("Signatura");
-signatureField.setImage(sigImg);
+    // 🔹 SIGNATURA MANUAL (posició fixa)
+page.drawImage(sigImg, {
+  x: 250,   // ← ajustarem això
+  y: 175,   // ← ajustarem això
+  width: 250,
+  height: 90
+});
+
 
 
 
     const today = new Date().toLocaleDateString("ca-ES");
 
     page.drawText(`Barcelona, ${today}`, {
-  x: 386,
-  y: 200,
+  x: 95,
+  y: 150,
   size: 11
 });
+
 
     
 pdfForm.updateFieldAppearances();
