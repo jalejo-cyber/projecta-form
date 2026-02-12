@@ -90,33 +90,55 @@ button{padding:10px 20px;border:none;border-radius:20px;cursor:pointer;font-size
 <div class="row">
 <select name="interes">
 <option value="">Interès a participar en aquest procés d’orientació</option>
-<option value="Baix">Baix</option>
-<option value="Mitjà">Mitjà</option>
-<option value="Alt">Alt</option>
+<option value="Per adquirir competències no demostrades en acreditació de competències (continuïtat formativa)">
+Per adquirir competències no demostrades en acreditació de competències (continuïtat formativa)
+</option>
+<option value="Per millorar la meva qualificació">
+Per millorar la meva qualificació
+</option>
+<option value="Per actualitzar competències i adaptar-me als canvis del meu lloc de treball">
+Per actualitzar competències i adaptar-me als canvis del meu lloc de treball
+</option>
+<option value="Per canviar de feina">
+Per canviar de feina
+</option>
+<option value="Per adquirir habilitat personals">
+Per adquirir habilitat personals
+</option>
+<option value="Altres">
+Altres
+</option>
 </select>
+
 </div>
 
 <div class="row">
 <select name="estudis">
 <option value="">Estudis</option>
-<option value="ESO">ESO</option>
-<option value="Batxillerat">Batxillerat</option>
-<option value="CFGM">Cicle Formatiu Grau Mitjà</option>
-<option value="CFGS">Cicle Formatiu Grau Superior</option>
-<option value="Universitaris">Estudis universitaris</option>
-<option value="Altres">Altres</option>
+<option value="Sense titulació">Sense titulació</option>
+<option value="Títol de graduat ESO / graduat escolar">Títol de graduat ESO / graduat escolar</option>
+<option value="Títol de batxillerat">Títol de batxillerat</option>
+<option value="Títol d'FP bàsica / Certificat professional de nivell 1">Títol d'FP bàsica / Certificat professional de nivell 1</option>
+<option value="Títol de tècnic/a / FP grau mitjà / Certificat professional de nivell 2">Títol de tècnic/a / FP grau mitjà / Certificat professional de nivell 2</option>
+<option value="Títol de tècnic/a Superior / FP grau superior / Certificat professional de nivell 3">Títol de tècnic/a Superior / FP grau superior / Certificat professional de nivell 3</option>
+<option value="Estudis universitaris de 1r Cicle (diplomatura-grau)">Estudis universitaris de 1r Cicle (diplomatura-grau)</option>
+<option value="Estudis universitaris de 2n Cicle (llicenciatura-màster)">Estudis universitaris de 2n Cicle (llicenciatura-màster)</option>
+<option value="Estudis universitaris de 3r Cicle (doctorat)">Estudis universitaris de 3r Cicle (doctorat)</option>
+<option value="Altra titulació">Altra titulació</option>
 </select>
+
 </div>
 
 <div class="row">
 <select name="categoriaProfessional">
 <option value="">Categoria professional</option>
-<option value="Direcció">Direcció</option>
-<option value="Tècnic">Tècnic/a</option>
-<option value="Administratiu">Administratiu/va</option>
-<option value="Operari">Operari/ària</option>
-<option value="Altres">Altres</option>
+<option value="Treballadors/ores de baixa qualificació">Treballadors/ores de baixa qualificació</option>
+<option value="Treballadors/ores qualificats/des">Treballadors/ores qualificats/des</option>
+<option value="Tècnics/Tècniques">Tècnics/Tècniques</option>
+<option value="Comandaments intermedis">Comandaments intermedis</option>
+<option value="Directius/Directives">Directius/Directives</option>
 </select>
+
 </div>
 
 <h3>Com vas conèixer aquest programa d’orientació?</h3>
@@ -149,12 +171,24 @@ button{padding:10px 20px;border:none;border-radius:20px;cursor:pointer;font-size
 <div class="row" id="codi3Row" style="display:none;">
 <select name="codi3">
 <option value="">Selecciona règim</option>
-<option value="RG">RG – Règim General</option>
-<option value="AUT">AUT – Autònom/a</option>
-<option value="MAR">MAR – Règim del Mar</option>
-<option value="AGR">AGR – Règim Agrari</option>
-<option value="ALT">ALT – Altres</option>
+
+<option value="RG">RG – Règim general</option>
+<option value="FD">FD – Fixos discontinus en períodes de no-ocupació</option>
+<option value="RE">RE – Regulació d’ocupació en períodes de no-ocupació</option>
+<option value="AGP">AGP – Règim especial agrari per compte pròpia</option>
+<option value="AGA">AGA – Règim especial agrari per compte d’altri</option>
+<option value="AU">AU – Règim especial d’autònoms</option>
+<option value="TM">TM – Treballadors/ores inclosos/es al règim especial del mar</option>
+<option value="CP">CP – Mutualistes de Col·legis Professionals no inclosos com autònoms</option>
+<option value="EH">EH – Treballadors/ores de la llar</option>
+<option value="DF">DF – Accedeixen a l’atur durant el període formatiu</option>
+<option value="RLE">RLE – Relacions laborals de caràcter especial</option>
+<option value="CESS">CESS – Conveni especial amb la Seguretat Social</option>
+<option value="AP">AP – Administració pública</option>
+<option value="FDI">FDI – Temps parcial indefinit en períodes de no ocupació</option>
+
 </select>
+
 </div>
 </div>
 
@@ -170,6 +204,16 @@ button{padding:10px 20px;border:none;border-radius:20px;cursor:pointer;font-size
 <div class="row">
 <input name="nassEmpresa" placeholder="Núm. Seguretat Social empresa">
 <input name="adrecaEmpresa" placeholder="Adreça centre de treball">
+</div>
+
+<div class="row">
+<select name="midaEmpresa">
+<option value="">Mida de l'empresa</option>
+<option value="De 1 a 9 persones treballadores">De 1 a 9 persones treballadores</option>
+<option value="De 10 a 49 persones treballadores">De 10 a 49 persones treballadores</option>
+<option value="De 50 a 249 persones treballadores">De 50 a 249 persones treballadores</option>
+<option value="Més de 250 persones treballadores">Més de 250 persones treballadores</option>
+</select>
 </div>
 
 <div class="row">
