@@ -170,6 +170,10 @@ page.drawImage(sigImg, {
   height: sigHeight
 });
 
+console.log("sigX:", sigX);
+console.log("sigY:", sigY);
+console.log("sigWidth:", sigWidth);
+console.log("sigHeight:", sigHeight);
 
 
 // ===============================
