@@ -37,7 +37,16 @@ export default async function handler(req, res) {
     safeSetText("Cognoms participant", fields.cognoms?.[0]);
     safeSetText("Nom sentitat participant", fields.nomSentit?.[0]);
     safeSetText("Document d'identitat", fields.dni?.[0]);
-    safeSetText("Data de naixament", fields.dataNaixement?.[0]);
+    const rawDate = fields.dataNaixement?.[0] || "";
+let formattedDate = "";
+
+if (rawDate.includes("-")) {
+  const [year, month, day] = rawDate.split("-");
+  formattedDate = `${day}-${month}-${year}`;
+}
+
+safeSetText("Data de naixament", formattedDate);
+
     safeSetText("País d'origen", fields.paisOrigen?.[0]);
     safeSetText("NASS", fields.nass?.[0]);
     safeSetText("Adreça participant", fields.adrecaParticipant?.[0]);
@@ -84,7 +93,7 @@ export default async function handler(req, res) {
     // =========================
 
     safeSetText("Rao social", fields.raoSocial?.[0]);
-    safeSetText("CIF", fields.cif?.[0]);
+    safeSetText("CIF_empresa", fields.cif?.[0]);
     safeSetText("Núm. d’inscripció a la Seguretat Social", fields.nassEmpresa?.[0]);
     safeSetText("Adreça del centre de treball", fields.adrecaEmpresa?.[0]);
     safeSetText("Comarca empresa", fields.comarcaEmpresa?.[0]);
@@ -137,19 +146,21 @@ export default async function handler(req, res) {
     const page = pdfDoc.getPages()[0];
 
     page.drawImage(sigImg, {
-      x: 330,
-      y: 160,
-      width: 200,
-      height: 70
-    });
+  x: 260,
+  y: 175,
+  width: 180,
+  height: 65
+});
+
 
     const today = new Date().toLocaleDateString("ca-ES");
 
     page.drawText(`Barcelona, ${today}`, {
-      x: 330,
-      y: 140,
-      size: 11
-    });
+  x: 260,
+  y: 150,
+  size: 11
+});
+
 
     const pdfBytes = await pdfDoc.save();
 
