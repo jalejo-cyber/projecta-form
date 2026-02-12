@@ -166,6 +166,13 @@ page.drawLine({
   thickness: 2
 });
 
+page.drawRectangle({
+  x: 200,
+  y: 400,
+  width: 200,
+  height: 200,
+  borderWidth: 10
+});
 
 
 
