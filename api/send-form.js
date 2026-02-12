@@ -148,36 +148,25 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
 // 🔴 ELIMINAR CAMP SIGNATURA PDF
 // ===============================
 try {
-  const signatureField = pdfForm.getSignature("Signatura");
-  pdfForm.removeField(signatureField);
-} catch (e) {
-  console.log("No s'ha pogut eliminar el camp de signatura (potser ja no existeix)");
-}
+  pdfForm.removeField(pdfForm.getField("Signatura"));
+} catch {}
+
 
 
 // ===============================
 // ✍️ DIBUIXAR SIGNATURA REAL
 // ===============================
-const sigB64 = (fields.signature?.[0] || "")
-  .replace(/^data:image\/png;base64,/, "");
+const sigB64 = (fields.signature?.[0] || "").replace(/^data:image\/png;base64,/, "");
+const sigImg = await pdfDoc.embedPng(sigB64);
 
-if (sigB64) {
+const page = pdfDoc.getPages()[0];
 
-  const sigImg = await pdfDoc.embedPng(sigB64);
-  const page = pdfDoc.getPages()[0];
-
-  // 📄 Dimensions pàgina (per si vols tornar a comprovar)
-  const { width, height } = page.getSize();
-  console.log("PAGE WIDTH:", width);
-  console.log("PAGE HEIGHT:", height);
-
-  // 🔴 SIGNATURA (rectangle vermell definitiu)
-  page.drawImage(sigImg, {
-    x: 210,      // ← ajustat més a la dreta
-    y: 155,      // ← ajustat una mica més avall
-    width: 220,
-    height: 80
-  });
+page.drawImage(sigImg, {
+  x: 190,
+  y: 165,
+  width: 230,
+  height: 90
+});
 
   // 🟢 LLOC I DATA (rectangle verd definitiu)
   const today = new Date();
