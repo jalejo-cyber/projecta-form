@@ -148,13 +148,16 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
     
 
 
-    // 🔹 SIGNATURA MANUAL (posició fixa)
-page.drawImage(sigImg, {
-  x: 250,   // ← ajustarem això
-  y: 175,   // ← ajustarem això
-  width: 250,
-  height: 90
-});
+    const sigB64 = (fields.signature?.[0] || "")
+  .replace(/^data:image\/png;base64,/, "");
+
+const sigImg = await pdfDoc.embedPng(sigB64);
+
+const signatureField = pdfForm.getSignature("Signatura");
+
+// 👇 Això posa la imatge EXACTAMENT dins del camp del PDF
+signatureField.setImage(sigImg);
+
 
 
 
