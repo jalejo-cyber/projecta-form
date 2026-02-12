@@ -145,26 +145,22 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
     const sigB64 = (fields.signature?.[0] || "").replace(/^data:image\/png;base64,/, "");
     const sigImg = await pdfDoc.embedPng(sigB64);
     const page = pdfDoc.getPages()[0];
-    const { width, height } = page.getSize();
-console.log("PAGE WIDTH:", width);
-console.log("PAGE HEIGHT:", height);
+    
 
 
-    page.drawImage(sigImg, {
-  x: 100,
-  y: 200,
-  width: 260,
-  height: 90
-});
+    const signatureField = pdfForm.getSignature("Signatura");
+signatureField.setImage(sigImg);
+
 
 
     const today = new Date().toLocaleDateString("ca-ES");
 
     page.drawText(`Barcelona, ${today}`, {
-  x: 60,
-  y: 210,
-  size: 12
+  x: 386,
+  y: 200,
+  size: 11
 });
+
     
 pdfForm.updateFieldAppearances();
 
