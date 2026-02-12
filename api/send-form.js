@@ -138,62 +138,38 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
     safeCheck("Autoritzo al Consorci per a la Formació Contínua de Catalunya a utilitzar les meves dades personals per rebre informació sobre la formació professional per a l’ocupació", fields.autoritzacioDades?.[0] === "on");
     safeCheck("Autoritzo al Consorci per a la Formació Contínua de Catalunya a que la meva imatge/veu pugui sortir en fotografies i/o vídeos publicats a la seva web i/o a les seves xarxes socials", fields.autoritzacioImatge?.[0] === "on");
 
- // ===============================
-// 1️⃣ OBTENIR PÀGINA
+// ===============================
+// 🔥 ELIMINAR CAMP SIGNATURA PDF
+// ===============================
+try {
+  const sigField = pdfForm.getField("Signatura");
+  pdfForm.removeField(sigField);
+} catch {}
+
+// ===============================
+// 📄 OBTENIR PÀGINA 1
 // ===============================
 const page = pdfDoc.getPages()[0];
 
-
 // ===============================
-// 2️⃣ LLEGIR POSICIÓ REAL DEL CAMP SIGNATURA
-// ===============================
-const sigField = pdfForm.getField("Signatura");
-const widgets = sigField.acroField.getWidgets();
-const rect = widgets[0].getRectangle();
-
-// Detectar si són coordenades absolutes
-if (rect.width < 0 || rect.height < 0) {
-  sigX = rect.x;
-  sigY = rect.y;
-  sigWidth = Math.abs(rect.width);
-  sigHeight = Math.abs(rect.height);
-} else {
-  sigX = rect.x;
-  sigY = rect.y;
-  sigWidth = rect.width;
-  sigHeight = rect.height;
-}
-page.drawImage(sigImg, {
-  x: sigX,
-  y: sigY,
-  width: sigWidth,
-  height: sigHeight
-});
-
-console.log("sigX:", sigX);
-console.log("sigY:", sigY);
-console.log("sigWidth:", sigWidth);
-console.log("sigHeight:", sigHeight);
-
-
-// ===============================
-// 3️⃣ ACTUALITZAR CAMPS
-// ===============================
-pdfForm.updateFieldAppearances();
-
-
-// ===============================
-// 4️⃣ PREPARAR SIGNATURA
+// ✍️ PREPARAR SIGNATURA
 // ===============================
 const sigB64 = (fields.signature?.[0] || "")
   .replace(/^data:image\/png;base64,/, "");
 
 const sigImg = await pdfDoc.embedPng(sigB64);
 
+// ===============================
+// 🎯 COORDENADES REALS (AJUSTABLES)
+// ===============================
 
-// ===============================
-// 5️⃣ DIBUIXAR EXACTAMENT ON ERA EL CAMP
-// ===============================
+// Prova aquests valors:
+const sigX = 185;
+const sigY = 160;
+const sigWidth = 240;
+const sigHeight = 90;
+
+// Dibuixar firma
 page.drawImage(sigImg, {
   x: sigX,
   y: sigY,
@@ -201,23 +177,22 @@ page.drawImage(sigImg, {
   height: sigHeight
 });
 
-
 // ===============================
-// 6️⃣ LLOC I DATA (just sota la firma)
+// 📍 LLOC I DATA
 // ===============================
 const today = new Date();
 const formattedDate = `${String(today.getDate()).padStart(2,'0')}-${String(today.getMonth()+1).padStart(2,'0')}-${today.getFullYear()}`;
 
 page.drawText(`Barcelona, ${formattedDate}`, {
-  x: sigX,
-  y: sigY - 20,
+  x: 75,
+  y: 145,
   size: 11
 });
-
 
 // ===============================
 // 💾 GUARDAR
 // ===============================
+pdfForm.updateFieldAppearances();
 const pdfBytes = await pdfDoc.save();
 
 
