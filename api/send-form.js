@@ -162,6 +162,7 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
   size: 11
 });
 
+pdfForm.updateFieldAppearances();
 
     const pdfBytes = await pdfDoc.save();
 
