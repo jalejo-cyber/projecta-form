@@ -143,28 +143,38 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
     // =========================
 
    
+// ===============================
+// 1️⃣ OBTENIR PÀGINA PRIMER
+// ===============================
+const page = pdfDoc.getPages()[0];
+
 
 // ===============================
-// 🔴 ELIMINAR CAMP SIGNATURA PDF
+// 2️⃣ ELIMINAR CAMP SIGNATURA
 // ===============================
 try {
   pdfForm.removeField(pdfForm.getField("Signatura"));
 } catch {}
 
-    const { width, height } = page.getSize();
 
-// 1️⃣ Actualitzar camps de formulari PRIMER
+// ===============================
+// 3️⃣ ACTUALITZAR CAMPS FORMULARI
+// ===============================
 pdfForm.updateFieldAppearances();
 
-// 2️⃣ Preparar signatura
+
+// ===============================
+// 4️⃣ PREPARAR SIGNATURA
+// ===============================
 const sigB64 = (fields.signature?.[0] || "")
   .replace(/^data:image\/png;base64,/, "");
 
 const sigImg = await pdfDoc.embedPng(sigB64);
 
-const page = pdfDoc.getPages()[0];
 
-// 3️⃣ Dibuixar signatura
+// ===============================
+// 5️⃣ DIBUIXAR SIGNATURA
+// ===============================
 page.drawImage(sigImg, {
   x: 100,
   y: 200,
@@ -172,21 +182,25 @@ page.drawImage(sigImg, {
   height: 90
 });
 
-// 4️⃣ Dibuixar lloc i data
-const today = new Date().toLocaleDateString("ca-ES");
 
-page.drawText(`Barcelona, ${today}`, {
+// ===============================
+// 6️⃣ DIBUIXAR LLOC I DATA
+// ===============================
+const today = new Date();
+const formattedDate = `${String(today.getDate()).padStart(2,'0')}-${String(today.getMonth()+1).padStart(2,'0')}-${today.getFullYear()}`;
+
+page.drawText(`Barcelona, ${formattedDate}`, {
   x: 60,
   y: 210,
   size: 12
 });
 
 
-
 // ===============================
-// 💾 GUARDAR PDF
+// 💾 GUARDAR
 // ===============================
 const pdfBytes = await pdfDoc.save();
+
 
 
     // =========================
