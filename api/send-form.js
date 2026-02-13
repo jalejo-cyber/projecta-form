@@ -116,40 +116,42 @@ export default async function handler(req, res) {
 const page = pdfDoc.getPages()[0];
 
 // ===============================
-// ✍️ PREPARAR SIGNATURA
+// ✍️ SIGNATURA + DATA SEGURES
 // ===============================
-const sigB64 = (fields.signature?.[0] || "")
-  .replace(/^data:image\/png;base64,/, "");
+const rawSignature = fields.signature?.[0] || "";
 
-if (sigB64) {
+if (rawSignature && rawSignature.startsWith("data:image")) {
 
-  const pngImage = await pdfDoc.embedPng(sigB64);
+  try {
 
-  // 🔵 FIRMA ENTRE LES DUES LÍNIES NEGRES
-  page.drawImage(pngImage, {
-    x: 190,     // esquerra/dreta
-    y: 185,     // amunt/avall  ⬅ pujada respecte abans
-    width: 240,
-    height: 75
-  });
+    const sigB64 = rawSignature.replace(/^data:image\/png;base64,/, "");
+    const pngImage = await pdfDoc.embedPng(sigB64);
+
+    // 🔵 FIRMA ENTRE LES DUES LÍNIES NEGRES
+    page.drawImage(pngImage, {
+      x: 190,
+      y: 185,
+      width: 240,
+      height: 75
+    });
+
+    // 📍 DATA AL COSTAT DE "Lloc i data:"
+    const today = new Date();
+    const formattedDate =
+      `${String(today.getDate()).padStart(2,'0')}-` +
+      `${String(today.getMonth()+1).padStart(2,'0')}-` +
+      today.getFullYear();
+
+    page.drawText(`Barcelona, ${formattedDate}`, {
+      x: 210,
+      y: 150,
+      size: 11
+    });
+
+  } catch (err) {
+    console.log("Error insertant signatura:", err);
+  }
 }
-
-
-// ===============================
-// 📍 DATA AL COSTAT DE "Lloc i data:"
-// ===============================
-const today = new Date();
-const formattedDate =
-  `${String(today.getDate()).padStart(2,'0')}-` +
-  `${String(today.getMonth()+1).padStart(2,'0')}-` +
-  today.getFullYear();
-
-// 🟢 A la dreta del text "Lloc i data:"
-page.drawText(`Barcelona, ${formattedDate}`, {
-  x: 210,   // ajustat perquè quedi al costat del text
-  y: 150,   // alineat amb la línia del text
-  size: 11
-});
 
 
 // ===============================
