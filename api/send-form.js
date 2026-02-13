@@ -133,15 +133,16 @@ if (sigB64) {
 }
 
 // ===============================
-// 📍 DATA
+// 📍 DATA AL COSTAT DE "Lloc i data:"
 // ===============================
-const today = new Date();
-const formattedDate =
-  `${String(today.getDate()).padStart(2,'0')}-` +
-  `${String(today.getMonth()+1).padStart(2,'0')}-` +
-  today.getFullYear();
+const todaySignature = new Date();
 
-page.drawText(`Barcelona, ${formattedDate}`, {
+const formattedSignatureDate =
+  `${String(todaySignature.getDate()).padStart(2,'0')}-` +
+  `${String(todaySignature.getMonth()+1).padStart(2,'0')}-` +
+  todaySignature.getFullYear();
+
+page.drawText(`Barcelona, ${formattedSignatureDate}`, {
   x: 200,
   y: 140,
   size: 11
