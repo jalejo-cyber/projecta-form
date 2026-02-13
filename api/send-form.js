@@ -122,21 +122,18 @@ const sigB64 = (fields.signature?.[0] || "")
   .replace(/^data:image\/png;base64,/, "");
 
 if (sigB64) {
-
   const pngImage = await pdfDoc.embedPng(sigB64);
 
-  // 🔵 FIRMA (una mica més avall però encara entre línies)
   page.drawImage(pngImage, {
-    x: 240,     // una mica més cap a la dreta
-    y: 170,     // BAIXEM una mica respecte abans
+    x: 240,
+    y: 170,
     width: 220,
     height: 70
   });
 }
 
-
 // ===============================
-// 📍 DATA AL COSTAT DE "Lloc i data:"
+// 📍 DATA
 // ===============================
 const today = new Date();
 const formattedDate =
@@ -144,20 +141,18 @@ const formattedDate =
   `${String(today.getMonth()+1).padStart(2,'0')}-` +
   today.getFullYear();
 
-// 🟢 Data alineada amb el text "Lloc i data:"
 page.drawText(`Barcelona, ${formattedDate}`, {
-  x: 200,   // just a la dreta del text
-  y: 140,   // alineat amb la línia
+  x: 200,
+  y: 140,
   size: 11
 });
-
-
 
 // ===============================
 // 💾 GUARDAR
 // ===============================
 pdfForm.updateFieldAppearances();
 const pdfBytes = await pdfDoc.save();
+
 
 
 
