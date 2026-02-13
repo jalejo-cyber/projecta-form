@@ -32,6 +32,18 @@
   border-radius: 5px;
   cursor: pointer;
 }
+    .buscar-cif-btn{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+}
+    .buscar-cif-btn:disabled{
+  background:#ccc;
+  cursor:not-allowed;
+  opacity:0.7;
+}
+
 </style>
 
 <head>
@@ -282,9 +294,22 @@ FDI – Treballadors/ores a temps parcial de caràcter indefinit en períodes de
 <h2>Dades empresa</h2>
 
 <div class="row">
-  <input name="raoSocial" placeholder="Raó social">
-  <input name="cif" placeholder="CIF empresa">
+  <input id="raoSocialInput" name="raoSocial" placeholder="Raó social">
+
+  <div style="display:flex; gap:10px; flex:1; align-items:center;">
+    <input id="cifInput" name="cif" placeholder="CIF empresa" style="flex:1;">
+
+    <button type="button" id="buscarCifBtn" 
+        class="btn-secondary buscar-cif-btn" 
+        disabled>
+  🔍 Cercar CIF
+</button>
+  </div>
 </div>
+
+<p style="font-size:13px; color:#666; margin-top:-10px;">
+Escriu la Raó social i cerca el CIF si no el coneixes.
+</p>
 
 
 <div class="row">
@@ -418,10 +443,54 @@ if (ocupatCheckbox && codi3Row) {
       infoPICA.style.display = this.checked ? "block" : "none";
     });
   }  
+  const buscarCifBtn = document.getElementById("buscarCifBtn");
+const raoSocialInput = document.getElementById("raoSocialInput");
+
+if (buscarCifBtn && raoSocialInput) {
+
+  // 🔁 Activar/desactivar segons text
+  raoSocialInput.addEventListener("input", function() {
+    buscarCifBtn.disabled = this.value.trim().length === 0;
+  });
+
+  // 🔍 Obrir cerca
+  buscarCifBtn.addEventListener("click", function() {
+
+    const empresa = raoSocialInput.value.trim();
+
+    if (!empresa) return;
+
+    const query = encodeURIComponent(empresa + " CIF");
+    const url = `https://www.google.com/search?q=${query}`;
+
+    window.open(url, "_blank");
+  });
+
+}
+
 
 // 👇 AQUÍ FORA DE TOT
 function closePopup(){
   document.getElementById("successPopup").style.display = "none";
+}
+  const buscarCifBtn = document.getElementById("buscarCifBtn");
+const raoSocialInput = document.getElementById("raoSocialInput");
+
+if (buscarCifBtn && raoSocialInput) {
+  buscarCifBtn.addEventListener("click", function() {
+
+    const empresa = raoSocialInput.value.trim();
+
+    if (!empresa) {
+      alert("Primer introdueix la Raó Social.");
+      return;
+    }
+
+    const query = encodeURIComponent(empresa + " CIF");
+    const url = `https://www.google.com/search?q=${query}`;
+
+    window.open(url, "_blank");
+  });
 }
 
 </script>
