@@ -123,11 +123,11 @@ if (sigB64) {
 
   const pngImage = await pdfDoc.embedPng(sigB64);
 
-  // 🎯 Coordenades ajustables
-  const sigX = 200;     // mou esquerra/dreta
-  const sigY = 155;     // mou amunt/avall
-  const sigWidth = 220;
-  const sigHeight = 80;
+  // 🎯 Coordenades reajustades
+  const sigX = 240;      // mou més a la dreta
+  const sigY = 130;      // baixa la firma
+  const sigWidth = 260;
+  const sigHeight = 85;
 
   page.drawImage(pngImage, {
     x: sigX,
@@ -136,7 +136,7 @@ if (sigB64) {
     height: sigHeight
   });
 
-  // 📍 DATA DINS DEL MATEIX RECTANGLE
+  // 📍 DATA just sota la firma, centrada
   const today = new Date();
   const formattedDate =
     `${String(today.getDate()).padStart(2,'0')}-` +
@@ -144,15 +144,16 @@ if (sigB64) {
     today.getFullYear();
 
   page.drawText(`Barcelona, ${formattedDate}`, {
-    x: sigX + 5,
-    y: sigY + sigHeight - 12,
-    size: 9
+    x: sigX + 40,     // una mica cap a la dreta
+    y: sigY - 15,     // just sota la firma
+    size: 10
   });
 }
 
 // ===============================
-// 💾 GUARDAR (SENSE updateFieldAppearances)
+// 💾 GUARDAR
 // ===============================
+pdfForm.updateFieldAppearances();
 const pdfBytes = await pdfDoc.save();
 
 
