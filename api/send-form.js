@@ -123,9 +123,9 @@ if (sigB64) {
 
   const pngImage = await pdfDoc.embedPng(sigB64);
 
-  // 🎯 Coordenades ajustades al rectangle blau real
-  const sigX = 200;
-  const sigY = 155;
+  // 🎯 Coordenades ajustables
+  const sigX = 200;     // mou esquerra/dreta
+  const sigY = 155;     // mou amunt/avall
   const sigWidth = 220;
   const sigHeight = 80;
 
@@ -151,10 +151,10 @@ if (sigB64) {
 }
 
 // ===============================
-// 💾 GUARDAR
+// 💾 GUARDAR (SENSE updateFieldAppearances)
 // ===============================
-pdfForm.updateFieldAppearances();
 const pdfBytes = await pdfDoc.save();
+
 
 
     // =====================================================
