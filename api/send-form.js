@@ -126,7 +126,7 @@ if (sigB64) {
 
   page.drawImage(pngImage, {
     x: 240,
-    y: 165,
+    y: 160,
     width: 220,
     height: 70
   });
@@ -144,7 +144,7 @@ const formattedSignatureDate =
 
 page.drawText(`Barcelona, ${formattedSignatureDate}`, {
   x: 200,
-  y: 165,
+  y: 175,
   size: 11
 });
 
