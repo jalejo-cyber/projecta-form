@@ -152,11 +152,6 @@ page.drawText(`Barcelona, ${formattedDate}`, {
 });
 
 
-  } catch (err) {
-    console.log("Error insertant signatura:", err);
-  }
-}
-
 
 // ===============================
 // 💾 GUARDAR
