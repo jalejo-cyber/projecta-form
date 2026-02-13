@@ -139,56 +139,73 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
     safeCheck("Autoritzo al Consorci per a la Formació Contínua de Catalunya a que la meva imatge/veu pugui sortir en fotografies i/o vídeos publicats a la seva web i/o a les seves xarxes socials", fields.autoritzacioImatge?.[0] === "on");
 
 // ===============================
-// 1️⃣ APLANAR FORMULARI
+// 📄 OBTENIR PÀGINA 1
 // ===============================
-pdfForm.flatten();
-
-// Guardem temporalment
-const flattenedBytes = await pdfDoc.save();
-
-// Tornem a carregar el PDF ja aplanat
-const finalPdfDoc = await PDFDocument.load(flattenedBytes);
-const page = finalPdfDoc.getPages()[0];
-
+const page = pdfDoc.getPages()[0];
 
 // ===============================
-// 2️⃣ INSERIR SIGNATURA (PER SOBRE DE TOT)
+// 📍 LLEGIR POSICIÓ REAL DEL CAMP SIGNATURA
+// ===============================
+let sigX = 0;
+let sigY = 0;
+let sigWidth = 0;
+let sigHeight = 0;
+
+try {
+  const sigField = pdfForm.getField("Signatura");
+  const widgets = sigField.acroField.getWidgets();
+  const rect = widgets[0].getRectangle();
+
+  sigX = rect.x;
+  sigY = rect.y;
+  sigWidth = rect.width;
+  sigHeight = rect.height;
+
+} catch (e) {
+  console.log("No s'ha pogut llegir el camp Signatura");
+}
+
+// ===============================
+// ✍️ PREPARAR SIGNATURA
 // ===============================
 const sigB64 = (fields.signature?.[0] || "")
   .replace(/^data:image\/png;base64,/, "");
 
 if (sigB64) {
-  const sigImg = await finalPdfDoc.embedPng(sigB64);
+  const sigImg = await pdfDoc.embedPng(sigB64);
+
+  // Reduïm una mica l'alçada per deixar espai a la data
+  const imgHeight = sigHeight * 0.75;
 
   page.drawImage(sigImg, {
-    x: 185,
-    y: 165,
-    width: 240,
-    height: 90
+    x: sigX,
+    y: sigY + (sigHeight - imgHeight),
+    width: sigWidth,
+    height: imgHeight
+  });
+
+  // ===============================
+  // 📅 LLOC I DATA DINS DEL MATEIX BLOC
+  // ===============================
+  const today = new Date();
+  const formattedDate =
+    `${String(today.getDate()).padStart(2,'0')}-` +
+    `${String(today.getMonth()+1).padStart(2,'0')}-` +
+    today.getFullYear();
+
+  page.drawText(`Barcelona, ${formattedDate}`, {
+    x: sigX + 10,
+    y: sigY + 5,
+    size: 10
   });
 }
 
-
 // ===============================
-// 3️⃣ LLOC I DATA
+// 💾 GUARDAR
 // ===============================
-const today = new Date();
-const formattedDate =
-  `${String(today.getDate()).padStart(2,'0')}-` +
-  `${String(today.getMonth()+1).padStart(2,'0')}-` +
-  today.getFullYear();
+pdfForm.updateFieldAppearances();
+const pdfBytes = await pdfDoc.save();
 
-page.drawText(`Barcelona, ${formattedDate}`, {
-  x: 90,
-  y: 145,
-  size: 11
-});
-
-
-// ===============================
-// 💾 GUARDAR DEFINITIU
-// ===============================
-const pdfBytes = await finalPdfDoc.save();
 
 
 
