@@ -326,16 +326,20 @@ return;
 const formData = new FormData(this);
 formData.append("signature", signaturePad.toDataURL());
 
-const res = await fetch("/api/send-form",{method:"POST",body:formData});
+const res = await fetch("/api/send-form", {
+  method: "POST",
+  body: formData
+});
 
-if(res.ok){
-alert("Sol·licitud enviada correctament!");
-this.reset();
-signaturePad.clear();
-document.getElementById("codi3Row").style.display = "none";
-}else{
-alert("Error en l'enviament.");
+if (res.ok) {
+  alert("Projecta't\n\nLa sol·licitud s'ha enviat correctament.");
+  this.reset();
+  signaturePad.clear();
+  document.getElementById("codi3Row").style.display = "none";
+} else {
+  alert("Hi ha hagut un error en l'enviament.");
 }
+
 });
 </script>
 
