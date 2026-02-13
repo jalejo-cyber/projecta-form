@@ -78,11 +78,11 @@ button{padding:10px 20px;border:none;border-radius:20px;cursor:pointer;font-size
 
 <div class="row">
 <input type="date" name="dataNaixement" required>
-<input name="paisOrigen" placeholder="País d'origen">
+<input name="paisOrigen" placeholder="País d'origen" required>
 </div>
 
 <div class="row">
-<select name="genere">
+<select name="genere" required>
 <option value="">Selecciona gènere</option>
 <option value="Home">Home</option>
 <option value="Dona">Dona</option>
@@ -92,13 +92,13 @@ button{padding:10px 20px;border:none;border-radius:20px;cursor:pointer;font-size
   
 <div class="row">
 <input name="nass" placeholder="NASS (Seguretat Social)">
-<input name="adrecaParticipant" placeholder="Adreça">
+<input name="adrecaParticipant" placeholder="Adreça" required>
 </div>
 
 <div class="row">
-<input name="poblacioParticipant" placeholder="Població">
-<input name="comarcaParticipant" placeholder="Comarca">
-<input name="cpParticipant" placeholder="Codi postal">
+<input name="poblacioParticipant" placeholder="Població" required>
+<input name="comarcaParticipant" placeholder="Comarca" required>
+<input name="cpParticipant" placeholder="Codi postal" required>
 </div>
 
 <div class="row">
@@ -148,7 +148,7 @@ Altres
 </div>
 
 <div class="row">
-<select name="estudis">
+<select name="estudis" required>
 <option value="">Estudis</option>
 <option value="Sense titulació">Sense titulació</option>
 <option value="Títol de graduat ESO / graduat escolar">Títol de graduat ESO / graduat escolar</option>
@@ -165,7 +165,7 @@ Altres
 </div>
 
 <div class="row">
-<select name="categoriaProfessional">
+<select name="categoriaProfessional" required>
 <option value="">Categoria professional</option>
 <option value="Treballadors/ores de baixa qualificació">Treballadors/ores de baixa qualificació</option>
 <option value="Treballadors/ores qualificats/des">Treballadors/ores qualificats/des</option>
@@ -310,18 +310,18 @@ FDI – Treballadors/ores a temps parcial de caràcter indefinit en períodes de
 Declaro que he estat informat/ada per part de l’entitat que l’actuació d’orientació forma part dels programes subvencionats pel Consorci.
 </label><br><br>
 
-<label><input type="checkbox" name="autoritzacioDades" required>
+<label><input type="checkbox" name="autoritzacioDades">
 Autoritzo al Consorci per utilitzar les meves dades personals per rebre informació.
 </label><br><br>
 
-<label><input type="checkbox" name="autoritzacioImatge" required>
+<label><input type="checkbox" name="autoritzacioImatge">
 Autoritzo a ser gravat/da o fotografiat/da com a participant durant 2 anys segons la normativa indicada.
 </label>
 </div>
 
 <!-- 7️⃣ DOCUMENTACIÓ ADDICIONAL -->
 <div class="section">
-<h2>Documentació addicional (opcional)</h2>
+<h2>Documentació addicional</h2>
 
 <div class="row">
   <label>DNI o NIE:
