@@ -48,6 +48,21 @@
   border-radius:20px;
   color:white;
 }
+    .mini-link-btn{
+  font-size:12px;
+  padding:6px 12px;
+  border-radius:15px;
+  background:#eee;
+  color:#333;
+  text-decoration:none;
+  white-space:nowrap;
+  transition:0.2s ease;
+}
+
+.mini-link-btn:hover{
+  background:#d80027;
+  color:white;
+}
 
 </style>
 
@@ -367,15 +382,17 @@ Autoritzo a ser gravat/da o fotografiat/da com a participant durant 2 anys segon
   </label>
 </div>
 
-<div class="row" style="align-items:center;">
+<div class="row" style="align-items:center; gap:10px;">
 <label>Vida laboral:
-  <input type="file" name="vidaLaboral" accept=".pdf,.jpg,.png" style="flex:1;">
+  <input type="file"
+         name="vidaLaboral"
+         accept=".pdf,.jpg,.png"
+         style="flex:1;">
 
   <a href="https://portal.seg-social.gob.es/wps/portal/importass/importass/Categorias/Vida+laboral+e+informes/Informes+sobre+tu+situacion+laboral/Informe+de+tu+vida+laboral"
      target="_blank"
-     class="btn-secondary"
-     style="text-decoration:none; display:flex; align-items:center; justify-content:center;">
-     📄 La pots descarregar aquí
+     class="mini-link-btn">
+     Descarregar
   </a>
 
 </div>
