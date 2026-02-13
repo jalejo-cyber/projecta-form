@@ -306,42 +306,54 @@ Protecció de dades: Les dades personals seran tractades pel Consorci per a la F
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 
 <script>
+
 const canvas = document.getElementById("signaturePad");
 const signaturePad = new SignaturePad(canvas);
 
-function clearSignature(){signaturePad.clear();}
-
-document.getElementById("ocupatCheck").addEventListener("change", function(){
-document.getElementById("codi3Row").style.display = this.checked ? "flex" : "none";
-});
+function clearSignature(){
+  signaturePad.clear();
+}
 
 document.getElementById("projectaForm").addEventListener("submit", async function(e){
-e.preventDefault();
+  e.preventDefault();
 
-if(signaturePad.isEmpty()){
-alert("Cal signar abans d'enviar.");
-return;
-}
+  if(signaturePad.isEmpty()){
+    alert("Cal signar abans d'enviar.");
+    return;
+  }
 
-const formData = new FormData(this);
-formData.append("signature", signaturePad.toDataURL());
+  const formData = new FormData(this);
+  formData.append("signature", signaturePad.toDataURL());
 
-const res = await fetch("/api/send-form", {
-  method: "POST",
-  body: formData
+  const res = await fetch("/api/send-form",{method:"POST",body:formData});
+
+  if(res.ok){
+    document.getElementById("successPopup").style.display = "flex";
+    this.reset();
+    signaturePad.clear();
+  }else{
+    alert("Error en l'enviament.");
+  }
 });
 
-if (res.ok) {
-  alert("Projecta't\n\nLa sol·licitud s'ha enviat correctament.");
-  this.reset();
-  signaturePad.clear();
-  document.getElementById("codi3Row").style.display = "none";
-} else {
-  alert("Hi ha hagut un error en l'enviament.");
+
+// 👇 AQUÍ FORA DE TOT
+function closePopup(){
+  document.getElementById("successPopup").style.display = "none";
 }
+
+</script>
+
 
 });
 </script>
+  
+<div id="successPopup" class="popup">
+  <div class="popup-content">
+    <p>La sol·licitud del programa <strong>Projecta't</strong> s'ha enviat correctament.</p>
+    <button onclick="closePopup()">Acceptar</button>
+  </div>
+</div>
 
 </body>
 </html>
