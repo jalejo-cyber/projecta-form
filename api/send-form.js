@@ -108,54 +108,52 @@ export default async function handler(req, res) {
     safeCheck("Autoritzo al Consorci per a la Formació Contínua de Catalunya a utilitzar les meves dades personals per rebre informació sobre la formació professional per a l’ocupació", fields.autoritzacioDades?.[0] === "on");
     safeCheck("Autoritzo al Consorci per a la Formació Contínua de Catalunya a que la meva imatge/veu pugui sortir en fotografies i/o vídeos publicats a la seva web i/o a les seves xarxes socials", fields.autoritzacioImatge?.[0] === "on");
 
-    // =====================================================
-    // ✍️ SIGNATURA REAL (SENSE INTERFERÈNCIA)
-    // =====================================================
-
 // ===============================
-// 📄 PÀGINA
+// 📄 OBTENIR PÀGINA 1
 // ===============================
 const page = pdfDoc.getPages()[0];
 
 // ===============================
-// ✍️ SIGNATURA DINS EL CAMP REAL
+// ✍️ PREPARAR SIGNATURA
 // ===============================
 const sigB64 = (fields.signature?.[0] || "")
   .replace(/^data:image\/png;base64,/, "");
 
 if (sigB64) {
-  try {
-    const signatureField = pdfForm.getSignature("Signatura");
-    const pngImage = await pdfDoc.embedPng(sigB64);
-    signatureField.setImage(pngImage);
-  } catch (e) {
-    console.log("No s'ha pogut inserir la signatura");
-  }
+
+  const pngImage = await pdfDoc.embedPng(sigB64);
+
+  // 🎯 Coordenades ajustades al rectangle blau real
+  const sigX = 200;
+  const sigY = 155;
+  const sigWidth = 220;
+  const sigHeight = 80;
+
+  page.drawImage(pngImage, {
+    x: sigX,
+    y: sigY,
+    width: sigWidth,
+    height: sigHeight
+  });
+
+  // 📍 DATA DINS DEL MATEIX RECTANGLE
+  const today = new Date();
+  const formattedDate =
+    `${String(today.getDate()).padStart(2,'0')}-` +
+    `${String(today.getMonth()+1).padStart(2,'0')}-` +
+    today.getFullYear();
+
+  page.drawText(`Barcelona, ${formattedDate}`, {
+    x: sigX + 5,
+    y: sigY + sigHeight - 12,
+    size: 9
+  });
 }
-
-// ===============================
-// 📍 LLOC I DATA (just sota)
-// ===============================
-const today = new Date();
-const formattedDate =
-  `${String(today.getDate()).padStart(2,'0')}-` +
-  `${String(today.getMonth()+1).padStart(2,'0')}-` +
-  today.getFullYear();
-
-page.drawText(`Barcelona, ${formattedDate}`, {
-  x: 95,
-  y: 150,
-  size: 11
-});
-
-// ===============================
-// 🔥 AIXÒ ÉS LA CLAU
-// ===============================
-pdfForm.flatten();
 
 // ===============================
 // 💾 GUARDAR
 // ===============================
+pdfForm.updateFieldAppearances();
 const pdfBytes = await pdfDoc.save();
 
 
