@@ -13,6 +13,8 @@ export default async function handler(req, res) {
 
     const pdfPath = path.join(process.cwd(), "public/template.pdf");
     const existingPdfBytes = fs.readFileSync(pdfPath);
+    console.log("PATH UTILITZAT:", pdfPath);
+    console.log("PDF SIZE:", existingPdfBytes.length);
 
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const pdfForm = pdfDoc.getForm();
