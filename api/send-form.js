@@ -116,7 +116,7 @@ export default async function handler(req, res) {
 const page = pdfDoc.getPages()[0];
 
 // ===============================
-// ✍️ SIGNATURA + DATA COMPACTE
+// ✍️ PREPARAR SIGNATURA
 // ===============================
 const sigB64 = (fields.signature?.[0] || "")
   .replace(/^data:image\/png;base64,/, "");
@@ -125,13 +125,12 @@ if (sigB64) {
 
   const pngImage = await pdfDoc.embedPng(sigB64);
 
-  // 🎯 COORDENADES AJUSTADES AL TEU PDF REAL
-  const sigX = 215;   // mou dreta/esquerra
-  const sigY = 120;   // mou amunt/avall
+  // 🔥 AJUST DEFINITIU
+  const sigX = 230;      // → mou a la dreta
+  const sigY = 125;      // ↓ baixa una mica
   const sigWidth = 250;
   const sigHeight = 85;
 
-  // 🖊️ Firma
   page.drawImage(pngImage, {
     x: sigX,
     y: sigY,
@@ -139,7 +138,7 @@ if (sigB64) {
     height: sigHeight
   });
 
-  // 📍 Data dins del mateix bloc
+  // 📍 DATA dins del mateix bloc
   const today = new Date();
   const formattedDate =
     `${String(today.getDate()).padStart(2,'0')}-` +
@@ -147,17 +146,15 @@ if (sigB64) {
     today.getFullYear();
 
   page.drawText(`Barcelona, ${formattedDate}`, {
-    x: sigX + 8,
-    y: sigY + sigHeight - 15,
+    x: sigX + 10,
+    y: sigY + sigHeight - 14,
     size: 9
   });
 }
 
-// ===============================
-// 💾 GUARDAR
-// ===============================
 pdfForm.updateFieldAppearances();
 const pdfBytes = await pdfDoc.save();
+
 
 
 
