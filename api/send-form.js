@@ -144,68 +144,45 @@ safeSetText("CIF_empresa", fields.cif?.[0]);
 const page = pdfDoc.getPages()[0];
 
 // ===============================
-// 📍 LLEGIR POSICIÓ REAL DEL CAMP SIGNATURA
-// ===============================
-let sigX = 0;
-let sigY = 0;
-let sigWidth = 0;
-let sigHeight = 0;
-
-try {
-  const sigField = pdfForm.getField("Signatura");
-  const widgets = sigField.acroField.getWidgets();
-  const rect = widgets[0].getRectangle();
-
-  sigX = rect.x;
-  sigY = rect.y;
-  sigWidth = rect.width;
-  sigHeight = rect.height;
-
-} catch (e) {
-  console.log("No s'ha pogut llegir el camp Signatura");
-}
-
-// ===============================
-// ✍️ PREPARAR SIGNATURA
+// ✍️ INSERTAR SIGNATURA AL CAMP REAL
 // ===============================
 const sigB64 = (fields.signature?.[0] || "")
   .replace(/^data:image\/png;base64,/, "");
 
 if (sigB64) {
-  const sigImg = await pdfDoc.embedPng(sigB64);
-
-  // Reduïm una mica l'alçada per deixar espai a la data
-  const imgHeight = sigHeight * 0.75;
-
-  page.drawImage(sigImg, {
-    x: sigX,
-    y: sigY + (sigHeight - imgHeight),
-    width: sigWidth,
-    height: imgHeight
-  });
-
-  // ===============================
-  // 📅 LLOC I DATA DINS DEL MATEIX BLOC
-  // ===============================
-  const today = new Date();
-  const formattedDate =
-    `${String(today.getDate()).padStart(2,'0')}-` +
-    `${String(today.getMonth()+1).padStart(2,'0')}-` +
-    today.getFullYear();
-
-  page.drawText(`Barcelona, ${formattedDate}`, {
-    x: sigX + 10,
-    y: sigY + 5,
-    size: 10
-  });
+  try {
+    const signatureField = pdfForm.getSignature("Signatura");
+    const pngImage = await pdfDoc.embedPng(sigB64);
+    signatureField.setImage(pngImage);
+  } catch (e) {
+    console.log("Error inserint signatura:", e);
+  }
 }
+
+// ===============================
+// 🔒 FER EL PDF PLA (ELIMINA INTERFERÈNCIES)
+// ===============================
+pdfForm.flatten();
+
+// ===============================
+// 📍 LLOC I DATA (compacte amb la firma)
+// ===============================
+const today = new Date();
+const formattedDate =
+  `${String(today.getDate()).padStart(2,'0')}-` +
+  `${String(today.getMonth()+1).padStart(2,'0')}-` +
+  today.getFullYear();
+
+page.drawText(`Barcelona, ${formattedDate}`, {
+  x: 210,   // ajustable fi
+  y: 170,   // ajustable fi
+  size: 10
+});
 
 // ===============================
 // 💾 GUARDAR
 // ===============================
-pdfForm.updateFieldAppearances();
 const pdfBytes = await pdfDoc.save();
-
 
 
 
