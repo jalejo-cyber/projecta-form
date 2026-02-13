@@ -410,6 +410,14 @@ if (ocupatCheckbox && codi3Row) {
     codi3Row.style.display = this.checked ? "flex" : "none";
   });
 }
+  const diversitatCheckbox = document.getElementById("diversitatCheck");
+  const infoPICA = document.getElementById("infoPICA");
+
+  if (diversitatCheckbox && infoPICA) {
+    diversitatCheckbox.addEventListener("change", function(){
+      infoPICA.style.display = this.checked ? "block" : "none";
+    });
+  }  
 
 // 👇 AQUÍ FORA DE TOT
 function closePopup(){
