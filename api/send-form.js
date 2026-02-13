@@ -116,37 +116,41 @@ export default async function handler(req, res) {
 const page = pdfDoc.getPages()[0];
 
 // ===============================
-// ✍️ SIGNATURA + DATA SEGURES
+// ✍️ PREPARAR SIGNATURA
 // ===============================
-const rawSignature = fields.signature?.[0] || "";
+const sigB64 = (fields.signature?.[0] || "")
+  .replace(/^data:image\/png;base64,/, "");
 
-if (rawSignature && rawSignature.startsWith("data:image")) {
+if (sigB64) {
 
-  try {
+  const pngImage = await pdfDoc.embedPng(sigB64);
 
-    const sigB64 = rawSignature.replace(/^data:image\/png;base64,/, "");
-    const pngImage = await pdfDoc.embedPng(sigB64);
+  // 🔵 FIRMA (una mica més avall però encara entre línies)
+  page.drawImage(pngImage, {
+    x: 240,     // una mica més cap a la dreta
+    y: 170,     // BAIXEM una mica respecte abans
+    width: 220,
+    height: 70
+  });
+}
 
-    // 🔵 FIRMA ENTRE LES DUES LÍNIES NEGRES
-    page.drawImage(pngImage, {
-      x: 190,
-      y: 185,
-      width: 240,
-      height: 75
-    });
 
-    // 📍 DATA AL COSTAT DE "Lloc i data:"
-    const today = new Date();
-    const formattedDate =
-      `${String(today.getDate()).padStart(2,'0')}-` +
-      `${String(today.getMonth()+1).padStart(2,'0')}-` +
-      today.getFullYear();
+// ===============================
+// 📍 DATA AL COSTAT DE "Lloc i data:"
+// ===============================
+const today = new Date();
+const formattedDate =
+  `${String(today.getDate()).padStart(2,'0')}-` +
+  `${String(today.getMonth()+1).padStart(2,'0')}-` +
+  today.getFullYear();
 
-    page.drawText(`Barcelona, ${formattedDate}`, {
-      x: 210,
-      y: 150,
-      size: 11
-    });
+// 🟢 Data alineada amb el text "Lloc i data:"
+page.drawText(`Barcelona, ${formattedDate}`, {
+  x: 200,   // just a la dreta del text
+  y: 140,   // alineat amb la línia
+  size: 11
+});
+
 
   } catch (err) {
     console.log("Error insertant signatura:", err);
