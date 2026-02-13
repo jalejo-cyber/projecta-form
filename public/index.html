@@ -112,7 +112,15 @@ button{padding:10px 20px;border:none;border-radius:20px;cursor:pointer;font-size
 <div class="section">
 <h2>Situacions específiques</h2>
 <div class="checkbox-group">
-<label><input type="checkbox" name="diversitat" value="true"> Diversitat funcional i/o trastorn mental</label>
+<label>
+  <input type="checkbox" id="diversitatCheck" name="diversitat" value="true">
+  Diversitat funcional i/o trastorn mental
+</label>
+
+<div id="infoPICA" style="display:none; margin-top:10px; padding:10px; background:#f5f5f5; border-radius:6px; font-size:13px;">
+  Autoritzo al Consorci per a la Formació Contínua de Catalunya a verificar el grau de discapacitat mitjançant el certificat que el Departament de Drets Socials emet, a través de l’aplicació PICA.
+</div>
+
 <label><input type="checkbox" name="violencia" value="true"> Violència de gènere</label>
 <label><input type="checkbox" name="terrorisme" value="true"> Víctima de terrorisme</label>
 </div>
