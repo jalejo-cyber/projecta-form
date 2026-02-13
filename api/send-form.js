@@ -144,7 +144,7 @@ const formattedSignatureDate =
 
 page.drawText(`Barcelona, ${formattedSignatureDate}`, {
   x: 200,
-  y: 150,
+  y: 155,
   size: 11
 });
 
