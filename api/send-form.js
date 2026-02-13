@@ -125,33 +125,36 @@ if (sigB64) {
 
   const pngImage = await pdfDoc.embedPng(sigB64);
 
-  // 🔥 AJUST DEFINITIU
-  const sigX = 230;      // → mou a la dreta
-  const sigY = 125;      // ↓ baixa una mica
-  const sigWidth = 250;
-  const sigHeight = 85;
-
+  // 🔵 FIRMA ENTRE LES DUES LÍNIES NEGRES
   page.drawImage(pngImage, {
-    x: sigX,
-    y: sigY,
-    width: sigWidth,
-    height: sigHeight
-  });
-
-  // 📍 DATA dins del mateix bloc
-  const today = new Date();
-  const formattedDate =
-    `${String(today.getDate()).padStart(2,'0')}-` +
-    `${String(today.getMonth()+1).padStart(2,'0')}-` +
-    today.getFullYear();
-
-  page.drawText(`Barcelona, ${formattedDate}`, {
-    x: sigX + 10,
-    y: sigY + sigHeight - 14,
-    size: 9
+    x: 190,     // esquerra/dreta
+    y: 185,     // amunt/avall  ⬅ pujada respecte abans
+    width: 240,
+    height: 75
   });
 }
 
+
+// ===============================
+// 📍 DATA AL COSTAT DE "Lloc i data:"
+// ===============================
+const today = new Date();
+const formattedDate =
+  `${String(today.getDate()).padStart(2,'0')}-` +
+  `${String(today.getMonth()+1).padStart(2,'0')}-` +
+  today.getFullYear();
+
+// 🟢 A la dreta del text "Lloc i data:"
+page.drawText(`Barcelona, ${formattedDate}`, {
+  x: 210,   // ajustat perquè quedi al costat del text
+  y: 150,   // alineat amb la línia del text
+  size: 11
+});
+
+
+// ===============================
+// 💾 GUARDAR
+// ===============================
 pdfForm.updateFieldAppearances();
 const pdfBytes = await pdfDoc.save();
 
