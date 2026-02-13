@@ -399,42 +399,70 @@ Protecció de dades: Les dades personals seran tractades pel Consorci per a la F
 
 <script>
 
-const canvas = document.getElementById("signaturePad");
-const signaturePad = new SignaturePad(canvas);
+document.addEventListener("DOMContentLoaded", () => {
 
-function clearSignature(){
-  signaturePad.clear();
-}
+  // ===============================
+  // SIGNATURE PAD
+  // ===============================
 
-document.getElementById("projectaForm").addEventListener("submit", async function(e){
-  e.preventDefault();
+  const canvas = document.getElementById("signaturePad");
+  const signaturePad = new SignaturePad(canvas);
 
-  if(signaturePad.isEmpty()){
-    alert("Cal signar abans d'enviar.");
-    return;
+  function clearSignature(){
+    signaturePad.clear();
   }
 
-  const formData = new FormData(this);
-  formData.append("signature", signaturePad.toDataURL());
+  window.clearSignature = clearSignature;
 
-  const res = await fetch("/api/send-form",{method:"POST",body:formData});
+  // ===============================
+  // ENVIAMENT FORMULARI
+  // ===============================
 
-  if(res.ok){
-    document.getElementById("successPopup").style.display = "flex";
-    this.reset();
-    signaturePad.clear();
-  }else{
-    alert("Error en l'enviament.");
-});
- } 
-const ocupatCheckbox = document.getElementById("ocupatCheck");
-const codi3Row = document.getElementById("codi3Row");
+  const form = document.getElementById("projectaForm");
 
-if (ocupatCheckbox && codi3Row) {
-  ocupatCheckbox.addEventListener("change", function(){
-    codi3Row.style.display = this.checked ? "flex" : "none";
+  form.addEventListener("submit", async function(e){
+    e.preventDefault();
+
+    if(signaturePad.isEmpty()){
+      alert("Cal signar abans d'enviar.");
+      return;
+    }
+
+    const formData = new FormData(this);
+    formData.append("signature", signaturePad.toDataURL());
+
+    const res = await fetch("/api/send-form", {
+      method:"POST",
+      body:formData
+    });
+
+    if(res.ok){
+      document.getElementById("successPopup").style.display = "flex";
+      this.reset();
+      signaturePad.clear();
+      buscarCifBtn.disabled = true; // tornar a desactivar
+    } else {
+      alert("Error en l'enviament.");
+    }
   });
-}
+
+  // ===============================
+  // OCUPAT → CODI3
+  // ===============================
+
+  const ocupatCheckbox = document.getElementById("ocupatCheck");
+  const codi3Row = document.getElementById("codi3Row");
+
+  if (ocupatCheckbox && codi3Row) {
+    ocupatCheckbox.addEventListener("change", function(){
+      codi3Row.style.display = this.checked ? "flex" : "none";
+    });
+  }
+
+  // ===============================
+  // DIVERSITAT → INFO PICA
+  // ===============================
+
   const diversitatCheckbox = document.getElementById("diversitatCheck");
   const infoPICA = document.getElementById("infoPICA");
 
@@ -442,59 +470,47 @@ if (ocupatCheckbox && codi3Row) {
     diversitatCheckbox.addEventListener("change", function(){
       infoPICA.style.display = this.checked ? "block" : "none";
     });
-  }  
-  const buscarCifBtn = document.getElementById("buscarCifBtn");
-const raoSocialInput = document.getElementById("raoSocialInput");
-
-if (buscarCifBtn && raoSocialInput) {
-
-  // 🔁 Activar/desactivar segons text
-  raoSocialInput.addEventListener("input", function() {
-    buscarCifBtn.disabled = this.value.trim().length === 0;
-  });
   }
 
-  // 🔍 Obrir cerca
-  buscarCifBtn.addEventListener("click", function() {
+  // ===============================
+  // CERCA ASSISTIDA CIF
+  // ===============================
 
-    const empresa = raoSocialInput.value.trim();
+  const buscarCifBtn = document.getElementById("buscarCifBtn");
+  const raoSocialInput = document.getElementById("raoSocialInput");
 
-    if (!empresa) return;
+  if (buscarCifBtn && raoSocialInput) {
 
-    const query = encodeURIComponent(empresa + " CIF");
-    const url = `https://www.google.com/search?q=${query}`;
+    // començar desactivat
+    buscarCifBtn.disabled = true;
 
-    window.open(url, "_blank");
-  });
+    // activar quan hi hagi text
+    raoSocialInput.addEventListener("input", function() {
+      buscarCifBtn.disabled = this.value.trim().length === 0;
+    });
 
-}
+    // obrir google
+    buscarCifBtn.addEventListener("click", function() {
+      const empresa = raoSocialInput.value.trim();
+      if (!empresa) return;
 
+      const query = encodeURIComponent(empresa + " CIF");
+      window.open(`https://www.google.com/search?q=${query}`, "_blank");
+    });
+  }
 
-// 👇 AQUÍ FORA DE TOT
+});
+
+// ===============================
+// POPUP
+// ===============================
+
 function closePopup(){
   document.getElementById("successPopup").style.display = "none";
 }
-  const buscarCifBtn = document.getElementById("buscarCifBtn");
-const raoSocialInput = document.getElementById("raoSocialInput");
-
-if (buscarCifBtn && raoSocialInput) {
-  buscarCifBtn.addEventListener("click", function() {
-
-    const empresa = raoSocialInput.value.trim();
-
-    if (!empresa) {
-      alert("Primer introdueix la Raó Social.");
-      return;
-    }
-
-    const query = encodeURIComponent(empresa + " CIF");
-    const url = `https://www.google.com/search?q=${query}`;
-
-    window.open(url, "_blank");
-  });
-}
 
 </script>
+
 
   
 <div id="successPopup" class="popup">
