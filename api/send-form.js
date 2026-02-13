@@ -112,55 +112,52 @@ export default async function handler(req, res) {
     // ✍️ SIGNATURA REAL (SENSE INTERFERÈNCIA)
     // =====================================================
 
-    const page = pdfDoc.getPages()[0];
+// ===============================
+// 📄 PÀGINA
+// ===============================
+const page = pdfDoc.getPages()[0];
 
-    let sigX = 0;
-    let sigY = 0;
-    let sigWidth = 0;
-    let sigHeight = 0;
+// ===============================
+// ✍️ SIGNATURA DINS EL CAMP REAL
+// ===============================
+const sigB64 = (fields.signature?.[0] || "")
+  .replace(/^data:image\/png;base64,/, "");
 
-    try {
-      const sigField = pdfForm.getField("Signatura");
-      const widget = sigField.acroField.getWidgets()[0];
-      const rect = widget.getRectangle();
+if (sigB64) {
+  try {
+    const signatureField = pdfForm.getSignature("Signatura");
+    const pngImage = await pdfDoc.embedPng(sigB64);
+    signatureField.setImage(pngImage);
+  } catch (e) {
+    console.log("No s'ha pogut inserir la signatura");
+  }
+}
 
-      sigX = rect.x;
-      sigY = rect.y;
-      sigWidth = rect.width;
-      sigHeight = rect.height;
+// ===============================
+// 📍 LLOC I DATA (just sota)
+// ===============================
+const today = new Date();
+const formattedDate =
+  `${String(today.getDate()).padStart(2,'0')}-` +
+  `${String(today.getMonth()+1).padStart(2,'0')}-` +
+  today.getFullYear();
 
-      pdfForm.removeField(sigField);
-    } catch {}
+page.drawText(`Barcelona, ${formattedDate}`, {
+  x: 95,
+  y: 150,
+  size: 11
+});
 
-    const sigB64 = (fields.signature?.[0] || "")
-      .replace(/^data:image\/png;base64,/, "");
+// ===============================
+// 🔥 AIXÒ ÉS LA CLAU
+// ===============================
+pdfForm.flatten();
 
-    if (sigB64) {
-      const sigImg = await pdfDoc.embedPng(sigB64);
-      page.drawImage(sigImg, {
-        x: sigX,
-        y: sigY,
-        width: sigWidth,
-        height: sigHeight
-      });
-    }
+// ===============================
+// 💾 GUARDAR
+// ===============================
+const pdfBytes = await pdfDoc.save();
 
-    const today = new Date();
-    const formatted =
-      `${String(today.getDate()).padStart(2,'0')}-` +
-      `${String(today.getMonth()+1).padStart(2,'0')}-` +
-      today.getFullYear();
-
-    page.drawText(`Barcelona, ${formatted}`, {
-      x: sigX,
-      y: sigY + sigHeight - 12,
-      size: 9
-    });
-
-    // 🔥 IMPORTANT: eliminar qualsevol interferència
-    pdfForm.flatten();
-
-    const pdfBytes = await pdfDoc.save();
 
     // =====================================================
     // 📧 EMAIL
