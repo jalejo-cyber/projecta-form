@@ -9,7 +9,8 @@ export const config = { api: { bodyParser: false } };
 export default async function handler(req, res) {
   try {
     const form = formidable();
-    const [fields] = await form.parse(req);
+    const [fields, files] = await form.parse(req);
+
 
     const pdfPath = path.join(process.cwd(), "public/template.pdf");
     const existingPdfBytes = fs.readFileSync(pdfPath);
@@ -172,15 +173,41 @@ const pdfBytes = await pdfDoc.save();
 
     const subject = `Sol·licitud Projecta't (${fields.nom?.[0] || ""} ${fields.cognoms?.[0] || ""})`;
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: "jalejo@fomentformacio.com",
-      subject,
-      attachments: [{
-        filename: "solicitud-projectat.pdf",
-        content: pdfBytes
-      }]
+   // ===============================
+// 📎 PREPARAR ADJUNTS
+// ===============================
+const attachments = [
+  {
+    filename: "solicitud-projectat.pdf",
+    content: pdfBytes
+  }
+];
+
+// Funció per afegir arxiu si existeix
+const addFileIfExists = (fileFieldName) => {
+  const file = files?.[fileFieldName]?.[0];
+  if (file) {
+    attachments.push({
+      filename: file.originalFilename,
+      content: fs.readFileSync(file.filepath)
     });
+  }
+};
+
+addFileIfExists("dniFile");
+addFileIfExists("vidaLaboralFile");
+addFileIfExists("cvFile");
+
+
+// ===============================
+// ✉️ ENVIAR CORREU
+// ===============================
+await transporter.sendMail({
+  from: `"Projecta't" <${process.env.EMAIL_USER}>`,
+  to: "jalejo@fomentformacio.com",
+  subject,
+  attachments
+});
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
