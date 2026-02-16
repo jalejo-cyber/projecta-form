@@ -195,8 +195,9 @@ const addFileIfExists = (fileFieldName) => {
 };
 
 addFileIfExists("dniFile");
-addFileIfExists("vidaLaboralFile");
+addFileIfExists("vidaLaboral");
 addFileIfExists("cvFile");
+
 
 
 // ===============================
