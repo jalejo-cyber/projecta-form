@@ -185,19 +185,18 @@ const attachments = [
 
 // Funció per afegir arxiu si existeix
 const addFileIfExists = (fileFieldName) => {
-  const file = files?.[fileFieldName];
+  const fileField = files?.[fileFieldName];
 
-  if (!file) return;
+  if (!fileField) return;
 
-  // Si formidable retorna array
-  const fileObj = Array.isArray(file) ? file[0] : file;
+  const file = Array.isArray(fileField) ? fileField[0] : fileField;
 
-  if (fileObj?.filepath) {
-    attachments.push({
-      filename: fileObj.originalFilename || fileFieldName,
-      content: fs.readFileSync(fileObj.filepath)
-    });
-  }
+  if (!file?.filepath) return;
+
+  attachments.push({
+    filename: file.originalFilename || "document",
+    content: fs.readFileSync(file.filepath)
+  });
 };
 
 
