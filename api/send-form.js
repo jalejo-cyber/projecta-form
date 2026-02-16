@@ -244,8 +244,10 @@ await transporter.sendMail({
 
     res.status(200).json({ ok: true });
 
-  } catch (err) {
-    res.status(500).json({ error: String(err?.message || err) });
-  }
+} catch (err) {
+  console.error("ERROR REAL:", err);
+  return res.status(500).json({ error: err.message || "Server error" });
+}
+
 }
 
