@@ -185,14 +185,21 @@ const attachments = [
 
 // Funció per afegir arxiu si existeix
 const addFileIfExists = (fileFieldName) => {
-  const file = files?.[fileFieldName]?.[0];
-  if (file) {
+  const file = files?.[fileFieldName];
+
+  if (!file) return;
+
+  // Si formidable retorna array
+  const fileObj = Array.isArray(file) ? file[0] : file;
+
+  if (fileObj?.filepath) {
     attachments.push({
-      filename: file.originalFilename,
-      content: fs.readFileSync(file.filepath)
+      filename: fileObj.originalFilename || fileFieldName,
+      content: fs.readFileSync(fileObj.filepath)
     });
   }
 };
+
 
 addFileIfExists("dniFile");
 addFileIfExists("vidaLaboralFile");
