@@ -114,7 +114,7 @@ const { fields, files } = await new Promise((resolve, reject) => {
     // 🔹 DECLARACIONS
     // =====================================================
 
-    safeCheck("Declaro que he estat informatada per part de l", fields.declaro?.[0] === "on");
+    safeCheck("Declaro que he estat informat/ada per part de l’entitat que l’actuació d’orientació forma part dels programes subvencionats pel Consorci.", fields.declaro?.[0] === "on");
     safeCheck("Autoritzo al Consorci per a la Formació Contínua de Catalunya a utilitzar les meves dades personals per rebre informació sobre la formació professional per a l’ocupació", fields.autoritzacioDades?.[0] === "on");
     safeCheck("Autoritzo al Consorci per a la Formació Contínua de Catalunya a que la meva imatge/veu pugui sortir en fotografies i/o vídeos publicats a la seva web i/o a les seves xarxes socials", fields.autoritzacioImatge?.[0] === "on");
 
