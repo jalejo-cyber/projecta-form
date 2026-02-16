@@ -8,6 +8,11 @@ export const config = { api: { bodyParser: false } };
 
 export default async function handler(req, res) {
   try {
+
+    if (req.method !== "POST") {
+  return res.status(405).json({ error: "Method not allowed" });
+}
+
 const form = formidable({ multiples: true });
 
 const { fields, files } = await new Promise((resolve, reject) => {
@@ -190,21 +195,24 @@ const attachments = [
   }
 ];
 
+    
 // Funció per afegir arxiu si existeix
 const addFileIfExists = (fileFieldName) => {
   const fileField = files?.[fileFieldName];
-
   if (!fileField) return;
 
   const file = Array.isArray(fileField) ? fileField[0] : fileField;
-
   if (!file?.filepath) return;
+
+  const fileBuffer = fs.readFileSync(file.filepath);
 
   attachments.push({
     filename: file.originalFilename || "document",
-    content: fs.readFileSync(file.filepath)
+    content: fileBuffer,
+    contentType: file.mimetype || "application/octet-stream"
   });
 };
+
 
 
 addFileIfExists("dniFile");
