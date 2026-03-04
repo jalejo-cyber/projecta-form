@@ -63,7 +63,72 @@
   background:#d80027;
   color:white;
 }
+.loader-overlay{
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.5);
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  z-index:10000;
+  color:white;
+  font-family:Arial;
+}
 
+.loader{
+  border:6px solid #f3f3f3;
+  border-top:6px solid #d80027;
+  border-radius:50%;
+  width:50px;
+  height:50px;
+  animation:spin 1s linear infinite;
+  margin-bottom:15px;
+}
+
+@keyframes spin{
+  0%{ transform:rotate(0deg); }
+  100%{ transform:rotate(360deg); }
+}
+.submit-btn{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  min-width:120px;
+}
+
+.btn-spinner{
+  display:none;
+  width:18px;
+  height:18px;
+  border:3px solid rgba(255,255,255,0.4);
+  border-top:3px solid white;
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+}
+
+.submit-btn.loading .btn-spinner{
+  display:inline-block;
+}
+
+.submit-btn.loading .btn-text{
+  opacity:0.7;
+}
+
+.submit-btn:disabled{
+  opacity:0.7;
+  cursor:not-allowed;
+}
+
+@keyframes spin{
+  from{transform:rotate(0deg);}
+  to{transform:rotate(360deg);}
+}
 </style>
 
 <head>
@@ -412,7 +477,10 @@ Autoritzo a ser gravat/da o fotografiat/da com a participant durant 2 anys segon
 <canvas id="signaturePad" class="signature-box" width="850" height="200"></canvas>
 <br><br>
 <button type="button" class="btn-secondary" onclick="clearSignature()">Esborrar signatura</button>
-<button type="submit" class="btn-primary">Enviar</button>
+<button type="submit" class="btn-primary submit-btn" id="submitBtn">
+  <span class="btn-text">Enviar</span>
+  <span class="btn-spinner"></span>
+</button>
 
 <p class="small-text">
 Protecció de dades: Les dades personals seran tractades pel Consorci per a la Formació Contínua de Catalunya amb la finalitat de gestionar la vostra participació en el programa d’orientació professional. Podeu exercir els vostres drets d’accés, rectificació, supressió i altres drets segons la normativa vigent en matèria de protecció de dades.
@@ -446,33 +514,53 @@ document.addEventListener("DOMContentLoaded", () => {
   // ENVIAMENT FORMULARI
   // ===============================
 
-  const form = document.getElementById("projectaForm");
+const submitBtn = document.getElementById("submitBtn");
 
-  form.addEventListener("submit", async function(e){
-    e.preventDefault();
+form.addEventListener("submit", async function(e){
+  e.preventDefault();
 
-    if(signaturePad.isEmpty()){
-      alert("Cal signar abans d'enviar.");
-      return;
-    }
+  if(signaturePad.isEmpty()){
+    alert("Cal signar abans d'enviar.");
+    return;
+  }
 
-    const formData = new FormData(this);
-    formData.append("signature", signaturePad.toDataURL());
+  // evitar doble enviament
+  if(submitBtn.classList.contains("loading")) return;
+
+  submitBtn.classList.add("loading");
+  submitBtn.disabled = true;
+
+  const formData = new FormData(this);
+  formData.append("signature", signaturePad.toDataURL());
+
+  try{
 
     const res = await fetch("/api/send-form", {
       method:"POST",
       body:formData
     });
 
+    submitBtn.classList.remove("loading");
+    submitBtn.disabled = false;
+
     if(res.ok){
       document.getElementById("successPopup").style.display = "flex";
       this.reset();
       signaturePad.clear();
-      buscarCifBtn.disabled = true; // tornar a desactivar
-    } else {
+      buscarCifBtn.disabled = true;
+    }else{
       alert("Error en l'enviament.");
     }
-  });
+
+  }catch(err){
+
+    submitBtn.classList.remove("loading");
+    submitBtn.disabled = false;
+
+    alert("Error de connexió amb el servidor");
+  }
+
+});
 
   // ===============================
   // OCUPAT → CODI3
@@ -547,6 +635,10 @@ function closePopup(){
     <button onclick="closePopup()">Acceptar</button>
   </div>
 </div>
-
+<!-- LOADER -->
+<div id="loaderOverlay" class="loader-overlay">
+  <div class="loader"></div>
+  <p>Enviant sol·licitud...</p>
+</div>
 </body>
 </html>
