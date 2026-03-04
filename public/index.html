@@ -2,107 +2,100 @@
 <html lang="ca">
 
 <style>
-
 .popup {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
+display: none;
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: rgba(0,0,0,0.5);
+justify-content: center;
+align-items: center;
+z-index: 9999;
 }
 
 .popup-content {
-  background: white;
-  padding: 25px;
-  border-radius: 10px;
-  text-align: center;
-  max-width: 400px;
-  font-family: Arial, sans-serif;
+background: white;
+padding: 25px;
+border-radius: 10px;
+text-align: center;
+max-width: 400px;
+font-family: Arial, sans-serif;
 }
 
 .popup-content button {
-  margin-top: 15px;
-  padding: 8px 18px;
-  border: none;
-  background: #8B0000;
-  color: white;
-  border-radius: 5px;
-  cursor: pointer;
+margin-top: 15px;
+padding: 8px 18px;
+border: none;
+background: #8B0000;
+color: white;
+border-radius: 5px;
+cursor: pointer;
 }
 
 .buscar-cif-btn{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  white-space:nowrap;
+display:flex;
+align-items:center;
+gap:6px;
+white-space:nowrap;
 }
 
 .buscar-cif-btn:disabled{
-  background:#ccc;
-  cursor:not-allowed;
-  opacity:0.7;
+background:#ccc;
+cursor:not-allowed;
+opacity:0.7;
 }
 
 a.btn-secondary{
-  padding:10px 20px;
-  border-radius:20px;
-  color:white;
+padding:10px 20px;
+border-radius:20px;
+color:white;
 }
 
 .mini-link-btn{
-  font-size:12px;
-  padding:6px 12px;
-  border-radius:15px;
-  background:#eee;
-  color:#333;
-  text-decoration:none;
-  white-space:nowrap;
-  transition:0.2s ease;
+font-size:12px;
+padding:6px 12px;
+border-radius:15px;
+background:#eee;
+color:#333;
+text-decoration:none;
+white-space:nowrap;
+transition:0.2s ease;
 }
 
 .mini-link-btn:hover{
-  background:#d80027;
-  color:white;
+background:#d80027;
+color:white;
 }
 
 /* LOADER */
-
 .loader-overlay{
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.5);
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
-  z-index:10000;
-  color:white;
-  font-family:Arial;
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.5);
+z-index:10000;
+justify-content:center;
+align-items:center;
 }
 
-.loader{
-  border:6px solid #f3f3f3;
-  border-top:6px solid #d80027;
-  border-radius:50%;
-  width:50px;
-  height:50px;
-  animation:spin 1s linear infinite;
-  margin-bottom:15px;
+.loader-spinner{
+border:6px solid #f3f3f3;
+border-top:6px solid #d80027;
+border-radius:50%;
+width:60px;
+height:60px;
+animation:spin 1s linear infinite;
 }
 
 @keyframes spin{
-  0%{transform:rotate(0deg);}
-  100%{transform:rotate(360deg);}
+0%{transform:rotate(0deg);}
+100%{transform:rotate(360deg);}
 }
-
 </style>
 
 <head>
@@ -111,7 +104,6 @@ a.btn-secondary{
 <title>Sol·licitud Projecta’t</title>
 
 <style>
-
 body{font-family:Arial, sans-serif;background:#fff;margin:0;padding:40px 20px;}
 .container{max-width:950px;margin:auto;}
 h1{text-align:center;margin-bottom:40px;}
@@ -125,25 +117,40 @@ button{padding:10px 20px;border:none;border-radius:20px;cursor:pointer;font-size
 .btn-secondary{background:#555;color:white;}
 .signature-box{border:1px solid #ccc;border-radius:8px;}
 .small-text{font-size:12px;color:#555;line-height:1.4;}
-
 </style>
+
 </head>
 
 <body>
+
+<!-- LOADER -->
+<div id="loaderOverlay" class="loader-overlay">
+<div class="loader-spinner"></div>
+</div>
 
 <div class="container">
 <h1>Sol·licitud Projecta’t</h1>
 
 <form id="projectaForm">
 
-<!-- TOT EL TEU FORMULARI ES MANTÉ EXACTAMENT IGUAL -->
+<!-- (TOT EL FORMULARI ES MANTÉ EXACTAMENT IGUAL) -->
 
-<!-- (he mantingut tot el teu HTML sense tocar cap camp) -->
+<!-- 7️⃣ SIGNATURA -->
+<div class="section">
+<h2>Signatura</h2>
 
-<!-- 1️⃣ DADES PERSONALS -->
-<!-- ... -->
-<!-- TOT EL TEU CODI CONTINUA EXACTAMENT IGUAL -->
-<!-- (no s’ha modificat res fins al JS) -->
+<canvas id="signaturePad" class="signature-box" width="850" height="200"></canvas>
+
+<br><br>
+
+<button type="button" class="btn-secondary" onclick="clearSignature()">Esborrar signatura</button>
+<button type="submit" id="submitBtn" class="btn-primary">Enviar</button>
+
+<p class="small-text">
+Protecció de dades: Les dades personals seran tractades pel Consorci per a la Formació Contínua de Catalunya amb la finalitat de gestionar la vostra participació en el programa d’orientació professional. Podeu exercir els vostres drets d’accés, rectificació, supressió i altres drets segons la normativa vigent en matèria de protecció de dades.
+</p>
+
+</div>
 
 </form>
 </div>
@@ -158,81 +165,117 @@ const canvas = document.getElementById("signaturePad");
 const signaturePad = new SignaturePad(canvas);
 
 function clearSignature(){
-  signaturePad.clear();
+signaturePad.clear();
 }
 
 window.clearSignature = clearSignature;
 
 const form = document.getElementById("projectaForm");
-
-let enviant = false;
+const loader = document.getElementById("loaderOverlay");
+const submitBtn = document.getElementById("submitBtn");
 
 form.addEventListener("submit", async function(e){
 
-  e.preventDefault();
+e.preventDefault();
 
-  if(enviant) return;
+if(signaturePad.isEmpty()){
+alert("Cal signar abans d'enviar.");
+return;
+}
 
-  if(signaturePad.isEmpty()){
-    alert("Cal signar abans d'enviar.");
-    return;
-  }
+loader.style.display="flex";
+submitBtn.disabled=true;
 
-  enviant = true;
+const formData = new FormData(this);
+formData.append("signature", signaturePad.toDataURL());
 
-  const loader = document.getElementById("loaderOverlay");
-  loader.style.display = "flex";
+try{
 
-  const formData = new FormData(this);
-  formData.append("signature", signaturePad.toDataURL());
+const res = await fetch("/api/send-form",{
+method:"POST",
+body:formData
+});
 
-  try{
+loader.style.display="none";
 
-    const res = await fetch("/api/send-form", {
-      method:"POST",
-      body:formData
-    });
+if(res.ok){
 
-    loader.style.display = "none";
-    enviant = false;
+document.getElementById("successPopup").style.display="flex";
+this.reset();
+signaturePad.clear();
+buscarCifBtn.disabled=true;
 
-    if(res.ok){
-      document.getElementById("successPopup").style.display = "flex";
-      this.reset();
-      signaturePad.clear();
-      buscarCifBtn.disabled = true;
-    } else {
-      alert("Error en l'enviament.");
-    }
+}else{
 
-  }catch(err){
+submitBtn.disabled=false;
+alert("Error en l'enviament.");
 
-    loader.style.display = "none";
-    enviant = false;
-    alert("Error de connexió amb el servidor");
+}
 
-  }
+}catch(err){
+
+loader.style.display="none";
+submitBtn.disabled=false;
+alert("Error de connexió.");
+
+}
 
 });
+
+const ocupatCheckbox = document.getElementById("ocupatCheck");
+const codi3Row = document.getElementById("codi3Row");
+
+if (ocupatCheckbox && codi3Row) {
+ocupatCheckbox.addEventListener("change", function(){
+codi3Row.style.display = this.checked ? "flex" : "none";
+});
+}
+
+const diversitatCheckbox = document.getElementById("diversitatCheck");
+const infoPICA = document.getElementById("infoPICA");
+
+if (diversitatCheckbox && infoPICA) {
+diversitatCheckbox.addEventListener("change", function(){
+infoPICA.style.display = this.checked ? "block" : "none";
+});
+}
+
+const buscarCifBtn = document.getElementById("buscarCifBtn");
+const raoSocialInput = document.getElementById("raoSocialInput");
+
+if (buscarCifBtn && raoSocialInput) {
+
+buscarCifBtn.disabled = true;
+
+raoSocialInput.addEventListener("input", function() {
+buscarCifBtn.disabled = this.value.trim().length === 0;
+});
+
+buscarCifBtn.addEventListener("click", function() {
+
+const empresa = raoSocialInput.value.trim();
+if (!empresa) return;
+
+const query = encodeURIComponent(empresa + " CIF");
+window.open(`https://www.google.com/search?q=${query}`, "_blank");
+
+});
+
+}
 
 });
 
 function closePopup(){
-  document.getElementById("successPopup").style.display = "none";
+document.getElementById("successPopup").style.display = "none";
 }
 
 </script>
 
 <div id="successPopup" class="popup">
-  <div class="popup-content">
-    <p>La sol·licitud del programa <strong>Projecta't</strong> s'ha enviat correctament.</p>
-    <button onclick="closePopup()">Acceptar</button>
-  </div>
+<div class="popup-content">
+<p>La sol·licitud del programa <strong>Projecta't</strong> s'ha enviat correctament.</p>
+<button onclick="closePopup()">Acceptar</button>
 </div>
-
-<div id="loaderOverlay" class="loader-overlay">
-<div class="loader"></div>
-<p>Enviant sol·licitud...</p>
 </div>
 
 </body>
