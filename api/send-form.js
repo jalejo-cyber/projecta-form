@@ -8,177 +8,285 @@ export const config = { api: { bodyParser: false } };
 
 export default async function handler(req, res) {
   try {
-
     if (req.method !== "POST") {
-  return res.status(405).json({ error: "Method not allowed" });
-}
+      return res.status(405).json({ error: "Method not allowed" });
+    }
 
-const form = formidable({
-  multiples: true,
-  allowEmptyFiles: true,
-  minFileSize: 0
-});
+    const form = formidable({
+      multiples: true,
+      allowEmptyFiles: true,
+      minFileSize: 0,
+      keepExtensions: true
+    });
 
-const { fields, files } = await new Promise((resolve, reject) => {
-  form.parse(req, (err, fields, files) => {
-    if (err) reject(err);
-    else resolve({ fields, files });
-  });
-});
+    const { fields, files } = await new Promise((resolve, reject) => {
+      form.parse(req, (err, fields, files) => {
+        if (err) reject(err);
+        else resolve({ fields, files });
+      });
+    });
 
+    // Helpers per llegir fields de formidable (array o string)
+    const getVal = (k) => {
+      const v = fields?.[k];
+      if (Array.isArray(v)) return v[0];
+      return v ?? "";
+    };
 
+    const isChecked = (k) => {
+      const v = getVal(k);
+      return v === "true" || v === "on" || v === "1" || v === true;
+    };
 
+    // =====================================================
+    // PDF LOAD
+    // =====================================================
     const pdfPath = path.join(process.cwd(), "public/template.pdf");
     const existingPdfBytes = fs.readFileSync(pdfPath);
-    console.log("PATH UTILITZAT:", pdfPath);
-    console.log("PDF SIZE:", existingPdfBytes.length);
 
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const pdfForm = pdfDoc.getForm();
+    const allPdfFields = pdfForm.getFields();
 
-    const safeSetText = (name, value) => {
-      try { pdfForm.getTextField(name).setText(value ?? ""); } catch {}
+    // Normalitza textos per fer match tolerant (accents, espais, puntuació, apostrofs)
+    const norm = (s) =>
+      (s ?? "")
+        .toString()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[\s’'".,;:()/\\\-–—]/g, "")
+        .toLowerCase();
+
+    // Troba camp per nom exacte o per "conté"
+    const findField = (candidates) => {
+      const list = Array.isArray(candidates) ? candidates : [candidates];
+      const normCandidates = list.map(norm).filter(Boolean);
+
+      // 1) Match "igual"
+      for (const cand of normCandidates) {
+        const exact = allPdfFields.find((f) => norm(f.getName()) === cand);
+        if (exact) return exact;
+      }
+
+      // 2) Match "conté"
+      for (const cand of normCandidates) {
+        const partial = allPdfFields.find((f) => norm(f.getName()).includes(cand));
+        if (partial) return partial;
+      }
+
+      return null;
     };
 
-    const safeSelect = (name, value) => {
-      try { pdfForm.getDropdown(name).select(value ?? ""); } catch {}
+    const safeSetTextSmart = (fieldNameCandidates, value) => {
+      try {
+        const field = findField(fieldNameCandidates);
+        if (!field || typeof field.setText !== "function") {
+          console.warn("[PDF] TextField no trobat per:", fieldNameCandidates);
+          return;
+        }
+        field.setText(value ?? "");
+      } catch (e) {
+        console.warn("[PDF] Error setText:", fieldNameCandidates, e?.message);
+      }
     };
 
-    const safeCheck = (name, checked) => {
-      try { if (checked) pdfForm.getCheckBox(name).check(); } catch {}
+    const safeSelectSmart = (fieldNameCandidates, value) => {
+      try {
+        if (!value) return;
+        const field = findField(fieldNameCandidates);
+        if (!field || typeof field.select !== "function") {
+          console.warn("[PDF] Dropdown no trobat per:", fieldNameCandidates);
+          return;
+        }
+        field.select(value);
+      } catch (e) {
+        console.warn("[PDF] Error select:", fieldNameCandidates, e?.message);
+      }
+    };
+
+    const safeCheckSmart = (fieldNameCandidates, checked) => {
+      try {
+        if (!checked) return;
+        const field = findField(fieldNameCandidates);
+        if (!field || typeof field.check !== "function") {
+          console.warn("[PDF] CheckBox no trobat per:", fieldNameCandidates);
+          return;
+        }
+        field.check();
+      } catch (e) {
+        console.warn("[PDF] Error check:", fieldNameCandidates, e?.message);
+      }
     };
 
     // =====================================================
     // 🔹 DADES PERSONALS
     // =====================================================
+    safeSetTextSmart("Nom participant", getVal("nom"));
+    safeSetTextSmart("Cognoms participant", getVal("cognoms"));
+    safeSetTextSmart(["Nom sentitat participant", "Nom sentit participant"], getVal("nomSentit"));
+    safeSetTextSmart("Document d'identitat", getVal("dni"));
 
-    safeSetText("Nom participant", fields.nom?.[0]);
-    safeSetText("Cognoms participant", fields.cognoms?.[0]);
-    safeSetText("Nom sentitat participant", fields.nomSentit?.[0]);
-    safeSetText("Document d'identitat", fields.dni?.[0]);
-
-    const rawDate = fields.dataNaixement?.[0] || "";
+    const rawDate = getVal("dataNaixement");
     let formattedDate = "";
-    if (rawDate.includes("-")) {
+    if (rawDate && rawDate.includes("-")) {
       const [y, m, d] = rawDate.split("-");
       formattedDate = `${d}-${m}-${y}`;
     }
-    safeSetText("Data de naixament", formattedDate);
+    safeSetTextSmart(["Data de naixament", "Data de naixement"], formattedDate);
 
-    safeSetText("País d'origen", fields.paisOrigen?.[0]);
-    safeSetText("NASS", fields.nass?.[0]);
-    safeSetText("Adreça participant", fields.adrecaParticipant?.[0]);
-    safeSetText("Comarca participant", fields.comarcaParticipant?.[0]);
-    safeSetText("Població participant", fields.poblacioParticipant?.[0]);
-    safeSetText("Codi postal particiapnt", fields.cpParticipant?.[0]);
-    safeSetText("Correu electrònic participant", fields.email?.[0]);
-    safeSetText("Telèfon", fields.telefon?.[0]);
+    safeSetTextSmart("País d'origen", getVal("paisOrigen"));
+    safeSetTextSmart("NASS", getVal("nass"));
+    safeSetTextSmart("Adreça participant", getVal("adrecaParticipant"));
+    safeSetTextSmart("Comarca participant", getVal("comarcaParticipant"));
+    safeSetTextSmart("Població participant", getVal("poblacioParticipant"));
+    safeSetTextSmart(["Codi postal particiapnt", "Codi postal participant"], getVal("cpParticipant"));
+    safeSetTextSmart("Correu electrònic participant", getVal("email"));
+    safeSetTextSmart("Telèfon", getVal("telefon"));
 
-    safeSelect("Gènere", fields.genere?.[0]);
+    safeSelectSmart("Gènere", getVal("genere"));
 
     // =====================================================
     // 🔹 DADES PROFESSIONALS
     // =====================================================
-
-    safeSelect("Interès a participar a l'acció formativa", fields.interes?.[0]);
-    safeSelect("Estudis", fields.estudis?.[0]);
-    safeSelect("Categoria professional (només persones ocuapdes)", fields.categoriaProfessional?.[0]);
+    safeSelectSmart(["Interès a participar a l'acció formativa", "Interès a participar en aquest procés d’orientació"], getVal("interes"));
+    safeSelectSmart("Estudis", getVal("estudis"));
+    safeSelectSmart(["Categoria professional (només persones ocuapdes)", "Categoria professional"], getVal("categoriaProfessional"));
 
     // =====================================================
     // 🔹 SITUACIÓ LABORAL
     // =====================================================
+    const ocupat = isChecked("ocupat");
+    safeCheckSmart(["Ocupatada Consigneuhi codi3", "Ocupat/ada"], ocupat);
 
-    const ocupat = fields.ocupat?.[0] === "true";
-    safeCheck("Ocupatada Consigneuhi codi3", ocupat);
-
-    if (ocupat && fields.codi3?.[0]) {
-      safeSelect("Consigna", fields.codi3?.[0]);
+    if (ocupat && getVal("codi3")) {
+      safeSelectSmart(["Consigna", "codi3", "Règim", "Regim"], getVal("codi3"));
     }
 
-    safeCheck("Afectatada ERTO", fields.erto?.[0] === "true");
-    safeCheck("Cuidadora no professionalCPN", fields.cpn?.[0] === "true");
+    safeCheckSmart(["Afectatada ERTO", "Afectada ERTO"], isChecked("erto"));
+    safeCheckSmart(["Cuidadora no professionalCPN", "Cuidadora no professional (CPN)"], isChecked("cpn"));
 
     // =====================================================
     // 🔹 SITUACIONS ESPECÍFIQUES
     // =====================================================
+    safeCheckSmart(["Diversitat funcional", "Diversitat funcional i/o trastorn mental"], isChecked("diversitat"));
+    safeCheckSmart(["Violència de gènere", "Violencia de genere"], isChecked("violencia"));
+    safeCheckSmart(["Víctima de terrorisme", "Victima de terrorisme"], isChecked("terrorisme"));
 
-    safeCheck("Diversitat funcional", fields.diversitat?.[0] === "true");
-    safeCheck("Violència de gènere", fields.violencia?.[0] === "true");
-    safeCheck("Víctima de terrorisme", fields.terrorisme?.[0] === "true");
+    // =====================================================
+    // 🔹 COM VAS CONÈIXER... (AIXÒ ÉS EL QUE ET FALTAVA)
+    // =====================================================
+    const coneixerMap = [
+      { k: "OT", pdf: ["Oficina de Treball", "OT"] },
+      { k: "WebConsorci", pdf: ["Web del Consorci", "Consorci"] },
+      { k: "EntitatFormacio", pdf: ["Entitat de formació", "Entitat de formacio"] },
+      { k: "Agents", pdf: ["Agents econòmics i socials", "Agents economics i socials"] },
+      { k: "Projectat", pdf: ["Projecta’t", "Projectat orientació professional", "Projecta"] },
+      { k: "SOC", pdf: ["Cercador de cursos del SOC", "SOC"] },
+      { k: "WebFPG", pdf: ["Web: fp.gencat.cat", "fp.gencat.cat", "Web fpgencat"] },
+      { k: "LinkedIn", pdf: ["LinkedIn"] },
+      { k: "EmpresaDifusio", pdf: ["Empresa"] },
+      { k: "TwitterConsorci", pdf: ["Twitter (X) del Consorci", "Twitter Consorci", "@fpo_continua"] },
+      { k: "TwitterOcupacio", pdf: ["Twitter (X) d'Ocupació", "Twitter Ocupacio", "@ocupaciocat"] },
+      { k: "Amics", pdf: ["Amics", "Amics o familiars"] },
+      { k: "Premsa", pdf: ["Premsa", "ràdio o televisió", "mitjans comunicació", "mitjans comunicacio"] },
+      { k: "AltresDifusio", pdf: ["Altres"] }
+    ];
+
+    for (const item of coneixerMap) {
+      safeCheckSmart(item.pdf, isChecked(item.k));
+    }
 
     // =====================================================
     // 🔹 EMPRESA
     // =====================================================
+    safeSetTextSmart(["Rao social", "Raó social"], getVal("raoSocial"));
 
-    safeSetText("Rao social", fields.raoSocial?.[0]);
-    safeSetText("CIF_empresa", fields.cif?.[0]);
-    safeSetText("Núm. d’inscripció a la Seguretat Social", fields.nassEmpresa?.[0]);
-    safeSetText("Adreça del centre de treball", fields.adrecaEmpresa?.[0]);
-    safeSetText("Comarca empresa", fields.comarcaEmpresa?.[0]);
-    safeSetText("Població empresa", fields.poblacioEmpresa?.[0]);
-    safeSetText("Codi postal empresa", fields.cpEmpresa?.[0]);
-    safeSelect("Mida de l'empresa", fields.midaEmpresa?.[0]);
+    // ✅ CIF: prova diferents noms i fallback per "conté CIF"
+    safeSetTextSmart(["CIF_empresa", "CIF empresa", "CIF"], getVal("cif"));
+
+    safeSetTextSmart(["Núm. d’inscripció a la Seguretat Social", "Num. d'inscripcio a la Seguretat Social"], getVal("nassEmpresa"));
+    safeSetTextSmart("Adreça del centre de treball", getVal("adrecaEmpresa"));
+    safeSetTextSmart("Comarca empresa", getVal("comarcaEmpresa"));
+    safeSetTextSmart("Població empresa", getVal("poblacioEmpresa"));
+    safeSetTextSmart("Codi postal empresa", getVal("cpEmpresa"));
+    safeSelectSmart(["Mida de l'empresa", "Mida de l’empresa"], getVal("midaEmpresa"));
 
     // =====================================================
-    // 🔹 DECLARACIONS
+    // 🔹 DECLARACIONS (fuzzy)
     // =====================================================
+    safeCheckSmart(
+      ["Declaro que he estat informat", "Declaro"],
+      isChecked("declaro")
+    );
 
-    safeCheck("Declaro que he estat informat/ada per part de l’entitat que l’actuació d’orientació forma part dels programes subvencionats pel Consorci.", fields.declaro?.[0] === "on");
-    safeCheck("Autoritzo al Consorci per a la Formació Contínua de Catalunya a utilitzar les meves dades personals per rebre informació sobre la formació professional per a l’ocupació", fields.autoritzacioDades?.[0] === "on");
-    safeCheck("Autoritzo al Consorci per a la Formació Contínua de Catalunya a que la meva imatge/veu pugui sortir en fotografies i/o vídeos publicats a la seva web i/o a les seves xarxes socials", fields.autoritzacioImatge?.[0] === "on");
+    safeCheckSmart(
+      ["utilitzar les meves dades personals", "dades personals", "rebre informació"],
+      isChecked("autoritzacioDades")
+    );
 
-// ===============================
-// 📄 OBTENIR PÀGINA 1
-// ===============================
-const page = pdfDoc.getPages()[0];
+    safeCheckSmart(
+      ["la meva imatge/veu", "imatge/veu", "fotografies i/o vídeos", "videos"],
+      isChecked("autoritzacioImatge")
+    );
 
-// ===============================
-// ✍️ PREPARAR SIGNATURA
-// ===============================
-const sigB64 = (fields.signature?.[0] || "")
-  .replace(/^data:image\/png;base64,/, "");
+    // =====================================================
+    // SIGNATURA + DATA
+    // =====================================================
+    const page = pdfDoc.getPages()[0];
 
-if (sigB64) {
-  const pngImage = await pdfDoc.embedPng(sigB64);
+    const sigB64 = (getVal("signature") || "").replace(/^data:image\/png;base64,/, "");
+    if (sigB64) {
+      const pngImage = await pdfDoc.embedPng(sigB64);
+      page.drawImage(pngImage, {
+        x: 240,
+        y: 160,
+        width: 220,
+        height: 70
+      });
+    }
 
-  page.drawImage(pngImage, {
-    x: 240,
-    y: 160,
-    width: 220,
-    height: 70
-  });
-}
+    const todaySignature = new Date();
+    const formattedSignatureDate =
+      `${String(todaySignature.getDate()).padStart(2, "0")}-` +
+      `${String(todaySignature.getMonth() + 1).padStart(2, "0")}-` +
+      todaySignature.getFullYear();
 
-// ===============================
-// 📍 DATA AL COSTAT DE "Lloc i data:"
-// ===============================
-const todaySignature = new Date();
+    page.drawText(`Barcelona, ${formattedSignatureDate}`, {
+      x: 200,
+      y: 175,
+      size: 11
+    });
 
-const formattedSignatureDate =
-  `${String(todaySignature.getDate()).padStart(2,'0')}-` +
-  `${String(todaySignature.getMonth()+1).padStart(2,'0')}-` +
-  todaySignature.getFullYear();
+    pdfForm.updateFieldAppearances();
+    const pdfBytes = await pdfDoc.save();
 
-page.drawText(`Barcelona, ${formattedSignatureDate}`, {
-  x: 200,
-  y: 175,
-  size: 11
-});
+    // =====================================================
+    // 📎 ADJUNTS (ANNEX + TOTS ELS FITXERS PUJATS)
+    // =====================================================
+    const attachments = [
+      { filename: "solicitud-projectat.pdf", content: pdfBytes }
+    ];
 
-// ===============================
-// 💾 GUARDAR
-// ===============================
-pdfForm.updateFieldAppearances();
-const pdfBytes = await pdfDoc.save();
+    // Adjunta qualsevol fitxer rebut per formidable (així NO et falta cap)
+    const filesObj = files || {};
+    for (const [fieldName, fileField] of Object.entries(filesObj)) {
+      const list = Array.isArray(fileField) ? fileField : [fileField];
+      for (const file of list) {
+        if (!file?.filepath) continue;
+        if (typeof file.size === "number" && file.size <= 0) continue; // evita buits
 
-
-
-
+        const fileBuffer = fs.readFileSync(file.filepath);
+        attachments.push({
+          filename: file.originalFilename || `${fieldName}`,
+          content: fileBuffer,
+          contentType: file.mimetype || "application/octet-stream"
+        });
+      }
+    }
 
     // =====================================================
     // 📧 EMAIL
     // =====================================================
-
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -187,71 +295,28 @@ const pdfBytes = await pdfDoc.save();
       }
     });
 
-    const subject = `Sol·licitud Projecta't (${fields.nom?.[0] || ""} ${fields.cognoms?.[0] || ""})`;
+    const subject = `Sol·licitud Projecta't (${getVal("nom")} ${getVal("cognoms")})`;
 
-   // ===============================
-// 📎 PREPARAR ADJUNTS
-// ===============================
-const attachments = [
-  {
-    filename: "solicitud-projectat.pdf",
-    content: pdfBytes
-  }
-];
-
-    
-// Funció per afegir arxiu si existeix
-const addFileIfExists = (fileFieldName) => {
-  const fileField = files?.[fileFieldName];
-  if (!fileField) return;
-
-  const file = Array.isArray(fileField) ? fileField[0] : fileField;
-  if (!file?.filepath) return;
-
-  const fileBuffer = fs.readFileSync(file.filepath);
-
-  attachments.push({
-    filename: file.originalFilename || "document",
-    content: fileBuffer,
-    contentType: file.mimetype || "application/octet-stream"
-  });
-};
-
-
-
-addFileIfExists("dniFile");
-addFileIfExists("vidaLaboralFile");
-addFileIfExists("cvFile");
-
-
-
-// ===============================
-// ✉️ ENVIAR CORREU
-// ===============================
-await transporter.sendMail({
-  from: `"Projecta't" <${process.env.EMAIL_USER}>`,
-  to: "jalejo@fomentformacio.com",
-  subject,
-  attachments
-});
-
+    // A tu (admin): annex + tots els docs
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: fields.email?.[0],
+      from: `"Projecta't" <${process.env.EMAIL_USER}>`,
+      to: "jalejo@fomentformacio.com",
       subject,
-      text: "Adjunt tens el teu PDF signat.",
-      attachments: [{
-        filename: "solicitud-projectat.pdf",
-        content: pdfBytes
-      }]
+      attachments
     });
 
-    res.status(200).json({ ok: true });
+    // Al participant: només annex
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: getVal("email"),
+      subject,
+      text: "Adjunt tens el teu PDF signat.",
+      attachments: [{ filename: "solicitud-projectat.pdf", content: pdfBytes }]
+    });
 
-} catch (err) {
-  console.error("ERROR REAL:", err);
-  return res.status(500).json({ error: err.message || "Server error" });
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error("ERROR REAL:", err);
+    return res.status(500).json({ error: err.message || "Server error" });
+  }
 }
-
-}
-
