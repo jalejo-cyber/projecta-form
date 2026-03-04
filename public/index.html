@@ -1,282 +1,498 @@
 <!DOCTYPE html>
 <html lang="ca">
-
 <style>
-.popup {
-display: none;
-position: fixed;
-top: 0;
-left: 0;
-width: 100%;
-height: 100%;
-background: rgba(0,0,0,0.5);
-justify-content: center;
-align-items: center;
-z-index: 9999;
-}
+  .popup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+  .popup-content {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    text-align: center;
+    max-width: 400px;
+    font-family: Arial, sans-serif;
+  }
+  .popup-content button {
+    margin-top: 15px;
+    padding: 8px 18px;
+    border: none;
+    background: #8B0000;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .buscar-cif-btn{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    white-space:nowrap;
+  }
+  .buscar-cif-btn:disabled{
+    background:#ccc;
+    cursor:not-allowed;
+    opacity:0.7;
+  }
+  a.btn-secondary{
+    padding:10px 20px;
+    border-radius:20px;
+    color:white;
+  }
+  .mini-link-btn{
+    font-size:12px;
+    padding:6px 12px;
+    border-radius:15px;
+    background:#eee;
+    color:#333;
+    text-decoration:none;
+    white-space:nowrap;
+    transition:0.2s ease;
+  }
+  .mini-link-btn:hover{
+    background:#d80027;
+    color:white;
+  }
 
-.popup-content {
-background: white;
-padding: 25px;
-border-radius: 10px;
-text-align: center;
-max-width: 400px;
-font-family: Arial, sans-serif;
-}
-
-.popup-content button {
-margin-top: 15px;
-padding: 8px 18px;
-border: none;
-background: #8B0000;
-color: white;
-border-radius: 5px;
-cursor: pointer;
-}
-
-.buscar-cif-btn{
-display:flex;
-align-items:center;
-gap:6px;
-white-space:nowrap;
-}
-
-.buscar-cif-btn:disabled{
-background:#ccc;
-cursor:not-allowed;
-opacity:0.7;
-}
-
-a.btn-secondary{
-padding:10px 20px;
-border-radius:20px;
-color:white;
-}
-
-.mini-link-btn{
-font-size:12px;
-padding:6px 12px;
-border-radius:15px;
-background:#eee;
-color:#333;
-text-decoration:none;
-white-space:nowrap;
-transition:0.2s ease;
-}
-
-.mini-link-btn:hover{
-background:#d80027;
-color:white;
-}
-
-/* LOADER */
-.loader-overlay{
-display:none;
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.5);
-z-index:10000;
-justify-content:center;
-align-items:center;
-}
-
-.loader-spinner{
-border:6px solid #f3f3f3;
-border-top:6px solid #d80027;
-border-radius:50%;
-width:60px;
-height:60px;
-animation:spin 1s linear infinite;
-}
-
-@keyframes spin{
-0%{transform:rotate(0deg);}
-100%{transform:rotate(360deg);}
-}
+  /* ===============================
+     LOADER (bloqueja dobles enviaments)
+     =============================== */
+  .loader-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 10000;
+    justify-content:center;
+    align-items:center;
+    cursor: progress;
+  }
+  .loader-spinner{
+    width:56px;
+    height:56px;
+    border:6px solid #ddd;
+    border-top-color:#d80027;
+    border-radius:50%;
+    animation: loaderSpin 1s linear infinite;
+  }
+  .loader-text{
+    margin-top:12px;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color:#333;
+    text-align:center;
+  }
+  @keyframes loaderSpin{
+    to{ transform: rotate(360deg); }
+  }
 </style>
-
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sol·licitud Projecta’t</title>
-
-<style>
-body{font-family:Arial, sans-serif;background:#fff;margin:0;padding:40px 20px;}
-.container{max-width:950px;margin:auto;}
-h1{text-align:center;margin-bottom:40px;}
-.section{margin-bottom:40px;}
-.section h2{margin-bottom:15px;font-size:18px;}
-.row{display:flex;gap:20px;margin-bottom:15px;flex-wrap:wrap;}
-input,select{flex:1;padding:10px;border-radius:6px;border:1px solid #ccc;font-size:14px;}
-.checkbox-group{display:flex;flex-wrap:wrap;gap:15px;margin-top:10px;}
-button{padding:10px 20px;border:none;border-radius:20px;cursor:pointer;font-size:14px;}
-.btn-primary{background:#d80027;color:white;}
-.btn-secondary{background:#555;color:white;}
-.signature-box{border:1px solid #ccc;border-radius:8px;}
-.small-text{font-size:12px;color:#555;line-height:1.4;}
-</style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sol·licitud Projecta’t</title>
+  <style>
+    body{font-family:Arial, sans-serif;background:#fff;margin:0;padding:40px 20px;}
+    .container{max-width:950px;margin:auto;}
+    h1{text-align:center;margin-bottom:40px;}
+    .section{margin-bottom:40px;}
+    .section h2{margin-bottom:15px;font-size:18px;}
+    .row{display:flex;gap:20px;margin-bottom:15px;flex-wrap:wrap;}
+    input,select{flex:1;padding:10px;border-radius:6px;border:1px solid #ccc;font-size:14px;}
+    .checkbox-group{display:flex;flex-wrap:wrap;gap:15px;margin-top:10px;}
+    button{padding:10px 20px;border:none;border-radius:20px;cursor:pointer;font-size:14px;}
+    .btn-primary{background:#d80027;color:white;}
+    .btn-secondary{background:#555;color:white;}
+    .signature-box{border:1px solid #ccc;border-radius:8px;}
+    .small-text{font-size:12px;color:#555;line-height:1.4;}
+  </style>
 </head>
-
 <body>
+  <div class="container">
+    <h1>Sol·licitud Projecta’t</h1>
+    <form id="projectaForm">
+      <!-- 1️⃣ DADES PERSONALS -->
+      <div class="section">
+        <h2>Dades personals</h2>
+        <div class="row">
+          <input name="nom" placeholder="Nom" required>
+          <input name="cognoms" placeholder="Cognoms" required>
+        </div>
+        <div class="row">
+          <input name="nomSentit" placeholder="Nom sentit">
+          <input name="dni" placeholder="DNI" required>
+        </div>
+        <div class="row">
+          <input type="date" name="dataNaixement" required>
+          <input name="paisOrigen" placeholder="País d'origen" required>
+        </div>
+        <div class="row">
+          <select name="genere" required>
+            <option value="">Selecciona gènere</option>
+            <option value="Home">Home</option>
+            <option value="Dona">Dona</option>
+            <option value="No binari">No binari</option>
+          </select>
+        </div>
+        <div class="row">
+          <input name="nass" placeholder="NASS (Seguretat Social)">
+          <input name="adrecaParticipant" placeholder="Adreça" required>
+        </div>
+        <div class="row">
+          <input name="poblacioParticipant" placeholder="Població" required>
+          <input name="comarcaParticipant" placeholder="Comarca" required>
+          <input name="cpParticipant" placeholder="Codi postal" required>
+        </div>
+        <div class="row">
+          <input type="email" name="email" placeholder="Correu electrònic" required>
+          <input name="telefon" placeholder="Telèfon" required>
+        </div>
+      </div>
 
-<!-- LOADER -->
-<div id="loaderOverlay" class="loader-overlay">
-<div class="loader-spinner"></div>
-</div>
+      <!-- 2️⃣ SITUACIONS ESPECÍFIQUES -->
+      <div class="section">
+        <h2>Situacions específiques</h2>
+        <div class="checkbox-group">
+          <label>
+            <input type="checkbox" id="diversitatCheck" name="diversitat" value="true"> Diversitat funcional i/o trastorn mental
+          </label>
+          <div id="infoPICA" style="display:none; margin-top:10px; padding:10px; background:#f5f5f5; border-radius:6px; font-size:13px;">
+            Autoritzo al Consorci per a la Formació Contínua de Catalunya a verificar el grau de discapacitat mitjançant el certificat que el Departament de Drets Socials emet, a través de l’aplicació PICA.
+          </div>
+          <label><input type="checkbox" name="violencia" value="true"> Violència de gènere</label>
+          <label><input type="checkbox" name="terrorisme" value="true"> Víctima de terrorisme</label>
+        </div>
+      </div>
 
-<div class="container">
-<h1>Sol·licitud Projecta’t</h1>
+      <!-- 3️⃣ DADES PROFESSIONALS / FORMATIVES -->
+      <div class="section">
+        <h2>Dades professionals / formatives</h2>
+        <div class="row">
+          <select name="interes">
+            <option value="">Interès a participar en aquest procés d’orientació</option>
+            <option value="Per adquirir competències no demostrades en acreditació de competències (continuïtat formativa)">
+              Per adquirir competències no demostrades en acreditació de competències (continuïtat formativa)
+            </option>
+            <option value="Per millorar la meva qualificació"> Per millorar la meva qualificació </option>
+            <option value="Per actualitzar competències i adaptar-me als canvis del meu lloc de treball">
+              Per actualitzar competències i adaptar-me als canvis del meu lloc de treball
+            </option>
+            <option value="Per canviar de feina"> Per canviar de feina </option>
+            <option value="Per adquirir habilitat personals"> Per adquirir habilitat personals </option>
+            <option value="Altres"> Altres </option>
+          </select>
+        </div>
+        <div class="row">
+          <select name="estudis" required>
+            <option value="">Estudis</option>
+            <option value="Sense titulació">Sense titulació</option>
+            <option value="Títol de graduat ESO / graduat escolar">Títol de graduat ESO / graduat escolar</option>
+            <option value="Títol de batxillerat">Títol de batxillerat</option>
+            <option value="Títol d'FP bàsica / Certificat professional de nivell 1">Títol d'FP bàsica / Certificat professional de nivell 1</option>
+            <option value="Títol de tècnic/a / FP grau mitjà / Certificat professional de nivell 2">Títol de tècnic/a / FP grau mitjà / Certificat professional de nivell 2</option>
+            <option value="Títol de tècnic/a Superior / FP grau superior / Certificat professional de nivell 3">Títol de tècnic/a Superior / FP grau superior / Certificat professional de nivell 3</option>
+            <option value="Estudis universitaris de 1r Cicle (diplomatura-grau)">Estudis universitaris de 1r Cicle (diplomatura-grau)</option>
+            <option value="Estudis universitaris de 2n Cicle (llicenciatura-màster)">Estudis universitaris de 2n Cicle (llicenciatura-màster)</option>
+            <option value="Estudis universitaris de 3r Cicle (doctorat)">Estudis universitaris de 3r Cicle (doctorat)</option>
+            <option value="Altra titulació">Altra titulació</option>
+          </select>
+        </div>
+        <div class="row">
+          <select name="categoriaProfessional" required>
+            <option value="">Categoria professional</option>
+            <option value="Treballadors/ores de baixa qualificació">Treballadors/ores de baixa qualificació</option>
+            <option value="Treballadors/ores qualificats/des">Treballadors/ores qualificats/des</option>
+            <option value="Tècnics/Tècniques">Tècnics/Tècniques</option>
+            <option value="Comandaments intermedis">Comandaments intermedis</option>
+            <option value="Directius/Directives">Directius/Directives</option>
+          </select>
+        </div>
+        <h3>Com vas conèixer aquest programa d’orientació?</h3>
+        <div class="checkbox-group">
+          <label><input type="checkbox" name="OT" value="true"> Oficina de Treball</label>
+          <label><input type="checkbox" name="WebConsorci" value="true"> Web del Consorci</label>
+          <label><input type="checkbox" name="EntitatFormacio" value="true"> Entitat de formació</label>
+          <label><input type="checkbox" name="Agents" value="true"> Agents econòmics i socials</label>
+          <label><input type="checkbox" name="Projectat" value="true"> Projecta’t orientació professional</label>
+          <label><input type="checkbox" name="SOC" value="true"> Cercador de cursos del SOC</label>
+          <label><input type="checkbox" name="WebFPG" value="true"> Web fpgencat.cat</label>
+          <label><input type="checkbox" name="LinkedIn" value="true"> LinkedIn</label>
+          <label><input type="checkbox" name="EmpresaDifusio" value="true"> Empresa</label>
+          <label><input type="checkbox" name="TwitterConsorci" value="true"> Twitter (X) Consorci</label>
+          <label><input type="checkbox" name="TwitterOcupacio" value="true"> Twitter (X) Ocupació</label>
+          <label><input type="checkbox" name="Amics" value="true"> Amics o familiars</label>
+          <label><input type="checkbox" name="Premsa" value="true"> Premsa, ràdio o televisió</label>
+          <label><input type="checkbox" name="AltresDifusio" value="true"> Altres</label>
+        </div>
+      </div>
 
-<form id="projectaForm">
+      <!-- 4️⃣ SITUACIÓ LABORAL -->
+      <div class="section">
+        <h2>Situació laboral</h2>
+        <label><input type="checkbox" id="ocupatCheck" name="ocupat" value="true"> Ocupat/ada</label>
+        <label><input type="checkbox" name="erto" value="true"> Afectada ERTO</label>
+        <label><input type="checkbox" name="cpn" value="true"> Cuidadora no professional</label>
+        <div class="row" id="codi3Row" style="display:none;">
+          <select name="codi3">
+            <option value="">Selecciona règim</option>
+            <option value="RG – Règim general"> RG – Règim general </option>
+            <option value="FD – Fixos discontinus en períodes de no-ocupació"> FD – Fixos discontinus en períodes de no-ocupació </option>
+            <option value="RE – Regulació d’ocupació en períodes de no-ocupació"> RE – Regulació d’ocupació en períodes de no-ocupació </option>
+            <option value="AGP – Règim especial agrari per compte pròpia"> AGP – Règim especial agrari per compte pròpia </option>
+            <option value="AGA – Règim especial agrari per compte d’altri"> AGA – Règim especial agrari per compte d’altri </option>
+            <option value="AU – Règim especial d’autònoms"> AU – Règim especial d’autònoms </option>
+            <option value="TM – Treballadors/ores inclosos/es al règim especial del mar"> TM – Treballadors/ores inclosos/es al règim especial del mar </option>
+            <option value="CP – Mutualistes de Col·legis Professionals no inclosos com autònoms"> CP – Mutualistes de Col·legis Professionals no inclosos com autònoms </option>
+            <option value="EH – Treballadors/ores de la llar"> EH – Treballadors/ores de la llar </option>
+            <option value="DF – Treballadors/ores que accedeixen a l’atur durant el període formatiu"> DF – Treballadors/ores que accedeixen a l’atur durant el període formatiu </option>
+            <option value="RLE – Treballadors/ores amb relacions laborals de caràcter especial"> RLE – Treballadors/ores amb relacions laborals de caràcter especial </option>
+            <option value="CESS – Treballadors/ores amb conveni especial amb la Seguretat Social"> CESS – Treballadors/ores amb conveni especial amb la Seguretat Social </option>
+            <option value="AP – Administració pública"> AP – Administració pública </option>
+            <option value="FDI – Treballadors/ores a temps parcial de caràcter indefinit en períodes de no ocupació"> FDI – Treballadors/ores a temps parcial de caràcter indefinit en períodes de no ocupació </option>
+          </select>
+        </div>
+      </div>
 
-<!-- (AQUÍ CONTINUA EXACTAMENT TOT EL TEU FORMULARI ORIGINAL SENSE CANVIS) -->
+      <!-- 5️⃣ EMPRESA -->
+      <div class="section">
+        <h2>Dades empresa</h2>
+        <div class="row">
+          <input id="raoSocialInput" name="raoSocial" placeholder="Raó social">
+          <div style="display:flex; gap:10px; flex:1; align-items:center;">
+            <input id="cifInput" name="cif" placeholder="CIF empresa" style="flex:1;">
+            <button type="button" id="buscarCifBtn" class="btn-secondary buscar-cif-btn" disabled> 🔍 Cercar CIF </button>
+          </div>
+        </div>
+        <p style="font-size:13px; color:#666; margin-top:-10px;">
+          Escriu la Raó social i cerca el CIF si no el coneixes.
+        </p>
+        <div class="row">
+          <input name="nassEmpresa" placeholder="Núm. Seguretat Social empresa">
+          <input name="adrecaEmpresa" placeholder="Adreça centre de treball">
+        </div>
+        <div class="row">
+          <select name="midaEmpresa">
+            <option value="">Mida de l'empresa</option>
+            <option value="De 1 a 9 persones treballadores">De 1 a 9 persones treballadores</option>
+            <option value="De 10 a 49 persones treballadores">De 10 a 49 persones treballadores</option>
+            <option value="De 50 a 249 persones treballadores">De 50 a 249 persones treballadores</option>
+            <option value="Més de 250 persones treballadores">Més de 250 persones treballadores</option>
+          </select>
+        </div>
+        <div class="row">
+          <input name="poblacioEmpresa" placeholder="Població empresa">
+          <input name="comarcaEmpresa" placeholder="Comarca empresa">
+          <input name="cpEmpresa" placeholder="Codi postal empresa">
+        </div>
+      </div>
 
-<!-- 7️⃣ SIGNATURA -->
-<div class="section">
-<h2>Signatura</h2>
+      <!-- 6️⃣ DECLARACIONS -->
+      <div class="section">
+        <h2>Declaracions i autoritzacions</h2>
+        <label><input type="checkbox" name="declaro" required> Declaro que he estat informat/ada per part de l’entitat que l’actuació d’orientació forma part dels programes subvencionats pel Consorci. </label><br><br>
+        <label><input type="checkbox" name="autoritzacioDades"> Autoritzo al Consorci per utilitzar les meves dades personals per rebre informació. </label><br><br>
+        <label><input type="checkbox" name="autoritzacioImatge"> Autoritzo a ser gravat/da o fotografiat/da com a participant durant 2 anys segons la normativa indicada. </label>
+      </div>
 
-<canvas id="signaturePad" class="signature-box" width="850" height="200"></canvas>
+      <!-- 7️⃣ DOCUMENTACIÓ ADDICIONAL -->
+      <div class="section">
+        <h2>Documentació addicional</h2>
+        <div class="row">
+          <label>DNI o NIE: <input type="file" name="dniFile" accept=".pdf,.jpg,.jpeg,.png"> </label>
+        </div>
+        <div class="row" style="align-items:center; gap:10px;">
+          <label>Vida laboral: <input type="file" name="vidaLaboralFile" accept=".pdf,.jpg,.png" style="flex:1;"> </label>
+          <a href="https://portal.seg-social.gob.es/wps/portal/importass/importass/Categorias/Vida+laboral+e+informes/Informes+sobre+tu+situacion+laboral/Informe+de+tu+vida+laboral" target="_blank" class="mini-link-btn"> Descarregar </a>
+        </div>
+        <div class="row">
+          <label>Currículum Vitae (CV): <input type="file" name="cvFile" accept=".pdf,.doc,.docx"> </label>
+        </div>
+      </div>
 
-<br><br>
+      <!-- 7️⃣ SIGNATURA -->
+      <div class="section">
+        <h2>Signatura</h2>
+        <canvas id="signaturePad" class="signature-box" width="850" height="200"></canvas>
+        <br><br>
+        <button type="button" class="btn-secondary" onclick="clearSignature()">Esborrar signatura</button>
+        <button type="submit" class="btn-primary">Enviar</button>
+        <p class="small-text">
+          Protecció de dades: Les dades personals seran tractades pel Consorci per a la Formació Contínua de Catalunya amb la finalitat de gestionar la vostra participació en el programa d’orientació professional. Podeu exercir els vostres drets d’accés, rectificació, supressió i altres drets segons la normativa vigent en matèria de protecció de dades.
+        </p>
+      </div>
+    </form>
+  </div>
 
-<button type="button" class="btn-secondary" onclick="clearSignature()">Esborrar signatura</button>
-<button type="submit" id="submitBtn" class="btn-primary">Enviar</button>
+  <!-- LOADER -->
+  <div id="loaderOverlay" class="loader-overlay" aria-hidden="true">
+    <div style="display:flex; flex-direction:column; align-items:center;">
+      <div class="loader-spinner" role="status" aria-label="Carregant"></div>
+      <div class="loader-text">Enviant...</div>
+    </div>
+  </div>
 
-<p class="small-text">
-Protecció de dades: Les dades personals seran tractades pel Consorci per a la Formació Contínua de Catalunya amb la finalitat de gestionar la vostra participació en el programa d’orientació professional. Podeu exercir els vostres drets d’accés, rectificació, supressió i altres drets segons la normativa vigent en matèria de protecció de dades.
-</p>
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+  <script>
+    /* ===============================
+       LOADER (global) + bloqueig dobles enviaments
+       =============================== */
+    let isSubmitting = false;
+    let submitBtn = null;
+    let loaderOverlay = null;
 
-</div>
+    function showLoader(){
+      if (!loaderOverlay) loaderOverlay = document.getElementById("loaderOverlay");
+      if (loaderOverlay) loaderOverlay.style.display = "flex";
+    }
+    function hideLoader(){
+      if (!loaderOverlay) loaderOverlay = document.getElementById("loaderOverlay");
+      if (loaderOverlay) loaderOverlay.style.display = "none";
+    }
 
-</form>
-</div>
+    document.addEventListener("DOMContentLoaded", () => {
+      // ===============================
+      // SIGNATURE PAD
+      // ===============================
+      const canvas = document.getElementById("signaturePad");
+      const signaturePad = new SignaturePad(canvas);
 
-<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+      function clearSignature(){
+        signaturePad.clear();
+      }
+      window.clearSignature = clearSignature;
 
-<script>
+      // ===============================
+      // ENVIAMENT FORMULARI
+      // ===============================
+      const form = document.getElementById("projectaForm");
+      submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+      loaderOverlay = document.getElementById("loaderOverlay");
 
-document.addEventListener("DOMContentLoaded", () => {
+      form.addEventListener("submit", async function(e){
+        e.preventDefault();
 
-const canvas = document.getElementById("signaturePad");
-const signaturePad = new SignaturePad(canvas);
+        // Evitar dobles enviaments
+        if (isSubmitting) return;
 
-function clearSignature(){
-signaturePad.clear();
-}
+        if(signaturePad.isEmpty()){
+          alert("Cal signar abans d'enviar.");
+          return;
+        }
 
-window.clearSignature = clearSignature;
+        isSubmitting = true;
+        if (submitBtn) submitBtn.disabled = true;
+        showLoader();
 
-const form = document.getElementById("projectaForm");
-const loader = document.getElementById("loaderOverlay");
-const submitBtn = document.getElementById("submitBtn");
+        let ok = false;
 
-form.addEventListener("submit", async function(e){
+        try{
+          const formData = new FormData(this);
+          formData.append("signature", signaturePad.toDataURL());
 
-e.preventDefault();
+          const res = await fetch("/api/send-form", {
+            method:"POST",
+            body:formData
+          });
 
-if(signaturePad.isEmpty()){
-alert("Cal signar abans d'enviar.");
-return;
-}
+          if(res.ok){
+            ok = true;
+            hideLoader();
+            document.getElementById("successPopup").style.display = "flex";
+            this.reset();
+            signaturePad.clear();
+            buscarCifBtn.disabled = true; // tornar a desactivar
+          } else {
+            alert("Error en l'enviament.");
+          }
+        } catch (err){
+          console.error(err);
+          alert("Error en l'enviament.");
+        } finally {
+          // Si NO ha anat bé, desbloquegem aquí.
+          // Si ha anat bé, desbloquegem quan tanquin el popup (Acceptar).
+          if (!ok){
+            hideLoader();
+            isSubmitting = false;
+            if (submitBtn) submitBtn.disabled = false;
+          }
+        }
+      });
 
-loader.style.display="flex";
-submitBtn.disabled=true;
+      // ===============================
+      // OCUPAT → CODI3
+      // ===============================
+      const ocupatCheckbox = document.getElementById("ocupatCheck");
+      const codi3Row = document.getElementById("codi3Row");
+      if (ocupatCheckbox && codi3Row) {
+        ocupatCheckbox.addEventListener("change", function(){
+          codi3Row.style.display = this.checked ? "flex" : "none";
+        });
+      }
 
-const formData = new FormData(this);
-formData.append("signature", signaturePad.toDataURL());
+      // ===============================
+      // DIVERSITAT → INFO PICA
+      // ===============================
+      const diversitatCheckbox = document.getElementById("diversitatCheck");
+      const infoPICA = document.getElementById("infoPICA");
+      if (diversitatCheckbox && infoPICA) {
+        diversitatCheckbox.addEventListener("change", function(){
+          infoPICA.style.display = this.checked ? "block" : "none";
+        });
+      }
 
-try{
+      // ===============================
+      // CERCA ASSISTIDA CIF
+      // ===============================
+      const buscarCifBtn = document.getElementById("buscarCifBtn");
+      const raoSocialInput = document.getElementById("raoSocialInput");
+      if (buscarCifBtn && raoSocialInput) {
+        // començar desactivat
+        buscarCifBtn.disabled = true;
 
-const res = await fetch("/api/send-form",{
-method:"POST",
-body:formData
-});
+        // activar quan hi hagi text
+        raoSocialInput.addEventListener("input", function() {
+          buscarCifBtn.disabled = this.value.trim().length === 0;
+        });
 
-loader.style.display="none";
+        // obrir google
+        buscarCifBtn.addEventListener("click", function() {
+          const empresa = raoSocialInput.value.trim();
+          if (!empresa) return;
+          const query = encodeURIComponent(empresa + " CIF");
+          window.open(`https://www.google.com/search?q=${query}`, "_blank");
+        });
+      }
+    });
 
-if(res.ok){
+    // ===============================
+    // POPUP
+    // ===============================
+    function closePopup(){
+      document.getElementById("successPopup").style.display = "none";
 
-document.getElementById("successPopup").style.display = "flex";
-this.reset();
-signaturePad.clear();
-buscarCifBtn.disabled = true;
+      // Desbloqueig després d'enviament OK
+      isSubmitting = false;
+      if (!submitBtn) submitBtn = document.querySelector('#projectaForm button[type="submit"]');
+      if (submitBtn) submitBtn.disabled = false;
 
-}else{
+      // Per si de cas quedés visible
+      hideLoader();
+    }
+  </script>
 
-submitBtn.disabled=false;
-alert("Error en l'enviament.");
-
-}
-
-}catch(err){
-
-loader.style.display="none";
-submitBtn.disabled=false;
-alert("Error de connexió.");
-
-}
-
-});
-
-const ocupatCheckbox = document.getElementById("ocupatCheck");
-const codi3Row = document.getElementById("codi3Row");
-
-if (ocupatCheckbox && codi3Row) {
-ocupatCheckbox.addEventListener("change", function(){
-codi3Row.style.display = this.checked ? "flex" : "none";
-});
-}
-
-const diversitatCheckbox = document.getElementById("diversitatCheck");
-const infoPICA = document.getElementById("infoPICA");
-
-if (diversitatCheckbox && infoPICA) {
-diversitatCheckbox.addEventListener("change", function(){
-infoPICA.style.display = this.checked ? "block" : "none";
-});
-}
-
-const buscarCifBtn = document.getElementById("buscarCifBtn");
-const raoSocialInput = document.getElementById("raoSocialInput");
-
-if (buscarCifBtn && raoSocialInput) {
-
-buscarCifBtn.disabled = true;
-
-raoSocialInput.addEventListener("input", function() {
-buscarCifBtn.disabled = this.value.trim().length === 0;
-});
-
-buscarCifBtn.addEventListener("click", function() {
-
-const empresa = raoSocialInput.value.trim();
-if (!empresa) return;
-
-const query = encodeURIComponent(empresa + " CIF");
-window.open(`https://www.google.com/search?q=${query}`, "_blank");
-
-});
-
-}
-
-});
-
-function closePopup(){
-document.getElementById("successPopup").style.display = "none";
-}
-
-</script>
-
-<div id="successPopup" class="popup">
-<div class="popup-content">
-<p>La sol·licitud del programa <strong>Projecta't</strong> s'ha enviat correctament.</p>
-<button onclick="closePopup()">Acceptar</button>
-</div>
-</div>
-
+  <div id="successPopup" class="popup">
+    <div class="popup-content">
+      <p>La sol·licitud del programa <strong>Projecta't</strong> s'ha enviat correctament.</p>
+      <button onclick="closePopup()">Acceptar</button>
+    </div>
+  </div>
 </body>
 </html>
