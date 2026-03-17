@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts } from "pdf-lib";
+import { PDFDocument } from "pdf-lib";
 import nodemailer from "nodemailer";
 import fs from "fs";
 import path from "path";
@@ -26,9 +26,7 @@ export default async function handler(req, res) {
       });
     });
 
-    // =====================================================
-    // HELPERS
-    // =====================================================
+    // Helpers
     const getVal = (k) => {
       const v = fields?.[k];
       if (Array.isArray(v)) return v[0];
@@ -48,22 +46,13 @@ export default async function handler(req, res) {
         .replace(/[\s’'".,;:()/\\\-–—]/g, "")
         .toLowerCase();
 
-    const today = new Date();
-    const formattedSignatureDate =
-      `${String(today.getDate()).padStart(2, "0")}-` +
-      `${String(today.getMonth() + 1).padStart(2, "0")}-` +
-      today.getFullYear();
-
-    const sigB64 = (getVal("signature") || "").replace(/^data:image\/png;base64,/, "");
-
-    const nomComplet = `${getVal("nom")} ${getVal("cognoms")}`.trim();
-    const dniNie = getVal("dni");
-
     // =====================================================
-    // 1) PDF PRINCIPAL
+    // PDF LOAD (ANNEX ORIGINAL INTACTE)
     // =====================================================
     const pdfPath = path.join(process.cwd(), "public/template.pdf");
-    const pdfDoc = await PDFDocument.load(fs.readFileSync(pdfPath));
+    const existingPdfBytes = fs.readFileSync(pdfPath);
+
+    const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const pdfForm = pdfDoc.getForm();
     const allPdfFields = pdfForm.getFields();
 
@@ -77,51 +66,85 @@ export default async function handler(req, res) {
       }
 
       for (const cand of normCandidates) {
-        const partial = allPdfFields.find((f) =>
-          norm(f.getName()).includes(cand)
-        );
+        const partial = allPdfFields.find((f) => norm(f.getName()).includes(cand));
         if (partial) return partial;
       }
 
       return null;
     };
 
-    const safeSetText = (names, value) => {
-      const f = findField(names);
-      if (f?.setText) f.setText(value ?? "");
+    const safeSetTextSmart = (fieldNameCandidates, value) => {
+      try {
+        const field = findField(fieldNameCandidates);
+        if (!field || typeof field.setText !== "function") return;
+        field.setText(value ?? "");
+      } catch {}
     };
 
-    const safeSelect = (names, value) => {
-      const f = findField(names);
-      if (f?.select && value) f.select(value);
+    const safeSelectSmart = (fieldNameCandidates, value) => {
+      try {
+        if (!value) return;
+        const field = findField(fieldNameCandidates);
+        if (!field || typeof field.select !== "function") return;
+        field.select(value);
+      } catch {}
     };
 
-    const safeCheck = (names, checked) => {
-      const f = findField(names);
-      if (f?.check && checked) f.check();
+    const safeCheckSmart = (fieldNameCandidates, checked) => {
+      try {
+        if (!checked) return;
+        const field = findField(fieldNameCandidates);
+        if (!field || typeof field.check !== "function") return;
+        field.check();
+      } catch {}
     };
 
-    // DADES
-    safeSetText("Nom participant", getVal("nom"));
-    safeSetText("Cognoms participant", getVal("cognoms"));
-    safeSetText("Document d'identitat", dniNie);
-    safeSetText("Correu electrònic participant", getVal("email"));
-    safeSetText("Telèfon", getVal("telefon"));
+    // ================= ANNEX (TOT IGUAL) =================
+    safeSetTextSmart("Nom participant", getVal("nom"));
+    safeSetTextSmart("Cognoms participant", getVal("cognoms"));
+    safeSetTextSmart(["Nom sentitat participant", "Nom sentit participant"], getVal("nomSentit"));
+    safeSetTextSmart("Document d'identitat", getVal("dni"));
 
-    safeSelect("Gènere", getVal("genere"));
+    const rawDate = getVal("dataNaixement");
+    let formattedDate = "";
+    if (rawDate && rawDate.includes("-")) {
+      const [y, m, d] = rawDate.split("-");
+      formattedDate = `${d}-${m}-${y}`;
+    }
 
-    // SIGNATURA
+    safeSetTextSmart(["Data de naixament", "Data de naixement"], formattedDate);
+    safeSetTextSmart("País d'origen", getVal("paisOrigen"));
+    safeSetTextSmart("NASS", getVal("nass"));
+    safeSetTextSmart("Adreça participant", getVal("adrecaParticipant"));
+    safeSetTextSmart("Comarca participant", getVal("comarcaParticipant"));
+    safeSetTextSmart("Població participant", getVal("poblacioParticipant"));
+    safeSetTextSmart(["Codi postal particiapnt", "Codi postal participant"], getVal("cpParticipant"));
+    safeSetTextSmart("Correu electrònic participant", getVal("email"));
+    safeSetTextSmart("Telèfon", getVal("telefon"));
+
+    safeSelectSmart("Gènere", getVal("genere"));
+
+    // ... (NO TOCO RES MÉS DEL TEU ANNEX)
+
+    // SIGNATURA ANNEX
     const page = pdfDoc.getPages()[0];
+    const sigB64 = (getVal("signature") || "").replace(/^data:image\/png;base64,/, "");
 
     if (sigB64) {
-      const img = await pdfDoc.embedPng(sigB64);
-      page.drawImage(img, {
+      const pngImage = await pdfDoc.embedPng(sigB64);
+      page.drawImage(pngImage, {
         x: 240,
         y: 160,
         width: 220,
         height: 70
       });
     }
+
+    const todaySignature = new Date();
+    const formattedSignatureDate =
+      `${String(todaySignature.getDate()).padStart(2, "0")}-` +
+      `${String(todaySignature.getMonth() + 1).padStart(2, "0")}-` +
+      todaySignature.getFullYear();
 
     page.drawText(`Barcelona, ${formattedSignatureDate}`, {
       x: 200,
@@ -132,129 +155,81 @@ export default async function handler(req, res) {
     pdfForm.updateFieldAppearances();
     const pdfBytes = await pdfDoc.save();
 
-   // =====================================================
-// 2) ACORDS (FIX REAL)
-// =====================================================
-const acordsDoc = await PDFDocument.load(
-  fs.readFileSync(path.join(process.cwd(), "public/Acords.pdf"))
-);
-
-const acordsForm = acordsDoc.getForm();
-const acordsFields = acordsForm.getFields();
-const acordsPage = acordsDoc.getPages()[0];
-const font = await acordsDoc.embedFont(StandardFonts.Helvetica);
-
-// 🔍 find tolerant
-const findAcordField = (candidates) => {
-  const list = Array.isArray(candidates) ? candidates : [candidates];
-  const normCandidates = list.map(norm).filter(Boolean);
-
-  for (const cand of normCandidates) {
-    const exact = acordsFields.find(f => norm(f.getName()) === cand);
-    if (exact) return exact;
-  }
-
-  for (const cand of normCandidates) {
-    const partial = acordsFields.find(f => norm(f.getName()).includes(cand));
-    if (partial) return partial;
-  }
-
-  return null;
-};
-
-const setAcord = (names, value) => {
-  const f = findAcordField(names);
-  if (f?.setText) f.setText(value ?? "");
-};
-
-// ✅ ARA FUNCIONARÀ SEGUR
-setAcord(
-  ["Nom i cognom", "persona orientada"],
-  nomComplet
-);
-
-setAcord(
-  ["dni", "nie"],
-  dniNie
-);
-
-setAcord(
-  ["data"],
-  formattedSignatureDate
-);
-
-// Signatura (la teva ja OK)
-if (sigB64) {
-  const img = await acordsDoc.embedPng(sigB64);
-  acordsPage.drawImage(img, {
-    x: 100,
-    y: 80,
-    width: 160,
-    height: 50
-  });
-}
-
-acordsForm.updateFieldAppearances(font);
-const acordsPdfBytes = await acordsDoc.save();
-
-   // =====================================================
-// 3) INFORME (FIX REAL)
-// =====================================================
-const informeDoc = await PDFDocument.load(
-  fs.readFileSync(path.join(process.cwd(), "public/Informe.pdf"))
-);
-
-const informeForm = informeDoc.getForm();
-const informeFields = informeForm.getFields();
-
-// 🔍 find tolerant
-const findInformeField = (candidates) => {
-  const list = Array.isArray(candidates) ? candidates : [candidates];
-  const normCandidates = list.map(norm).filter(Boolean);
-
-  for (const cand of normCandidates) {
-    const exact = informeFields.find(f => norm(f.getName()) === cand);
-    if (exact) return exact;
-  }
-
-  for (const cand of normCandidates) {
-    const partial = informeFields.find(f =>
-      norm(f.getName()).includes(cand)
+    // =====================================================
+    // ➕ ACORDS (AFEgit)
+    // =====================================================
+    const acordsDoc = await PDFDocument.load(
+      fs.readFileSync(path.join(process.cwd(), "public/Acords.pdf"))
     );
-    if (partial) return partial;
-  }
 
-  return null;
-};
+    const acordsForm = acordsDoc.getForm();
+    const acordsFields = acordsForm.getFields();
+    const acordsPage = acordsDoc.getPages()[0];
 
-const setInforme = (names, value) => {
-  const f = findInformeField(names);
-  if (f?.setText) f.setText(value ?? "");
-};
+    const findAcordField = (candidates) => {
+      const list = Array.isArray(candidates) ? candidates : [candidates];
+      const normCandidates = list.map(norm).filter(Boolean);
 
-// ✅ AQUESTS ARA SÍ QUE ENCAIXARAN
-setInforme(
-  ["nom", "cognom"],
-  nomComplet
-);
+      for (const cand of normCandidates) {
+        const f = acordsFields.find(x => norm(x.getName()).includes(cand));
+        if (f) return f;
+      }
+      return null;
+    };
 
-setInforme(
-  ["nif", "dni"],
-  dniNie
-);
+    const setAcord = (names, val) => {
+      const f = findAcordField(names);
+      if (f?.setText) f.setText(val ?? "");
+    };
 
-setInforme(
-  ["telefon"],
-  getVal("telefon")
-);
+    setAcord(["nom", "persona"], `${getVal("nom")} ${getVal("cognoms")}`);
+    setAcord(["dni", "nie"], getVal("dni"));
+    setAcord(["data"], formattedSignatureDate);
 
-setInforme(
-  ["correu", "email"],
-  getVal("email")
-);
+    if (sigB64) {
+      const img = await acordsDoc.embedPng(sigB64);
+      acordsPage.drawImage(img, {
+        x: 100,
+        y: 80,
+        width: 160,
+        height: 50
+      });
+    }
 
-informeForm.updateFieldAppearances();
-const informePdfBytes = await informeDoc.save();
+    const acordsPdfBytes = await acordsDoc.save();
+
+    // =====================================================
+    // ➕ INFORME (AFEgit)
+    // =====================================================
+    const informeDoc = await PDFDocument.load(
+      fs.readFileSync(path.join(process.cwd(), "public/Informe.pdf"))
+    );
+
+    const informeForm = informeDoc.getForm();
+    const informeFields = informeForm.getFields();
+
+    const findInformeField = (candidates) => {
+      const list = Array.isArray(candidates) ? candidates : [candidates];
+      const normCandidates = list.map(norm).filter(Boolean);
+
+      for (const cand of normCandidates) {
+        const f = informeFields.find(x => norm(x.getName()).includes(cand));
+        if (f) return f;
+      }
+      return null;
+    };
+
+    const setInforme = (names, val) => {
+      const f = findInformeField(names);
+      if (f?.setText) f.setText(val ?? "");
+    };
+
+    setInforme(["persona", "cognom"], `${getVal("nom")} ${getVal("cognoms")}`);
+    setInforme(["nif"], getVal("dni"));
+    setInforme(["telefon"], getVal("telefon"));
+    setInforme(["correu"], getVal("email"));
+
+    const informePdfBytes = await informeDoc.save();
 
     // =====================================================
     // ADJUNTS
@@ -265,14 +240,16 @@ const informePdfBytes = await informeDoc.save();
       { filename: "informe-orientacio.pdf", content: informePdfBytes }
     ];
 
-    // afegir fitxers pujats
-    for (const fileField of Object.values(files || {})) {
+    const filesObj = files || {};
+    for (const [fieldName, fileField] of Object.entries(filesObj)) {
       const list = Array.isArray(fileField) ? fileField : [fileField];
-      for (const f of list) {
-        if (!f?.filepath || f.size <= 0) continue;
+      for (const file of list) {
+        if (!file?.filepath) continue;
+        if (file.size <= 0) continue;
+
         attachments.push({
-          filename: f.originalFilename,
-          content: fs.readFileSync(f.filepath)
+          filename: file.originalFilename || fieldName,
+          content: fs.readFileSync(file.filepath)
         });
       }
     }
@@ -288,7 +265,7 @@ const informePdfBytes = await informeDoc.save();
       }
     });
 
-    const subject = `Sol·licitud Projecta't (${nomComplet})`;
+    const subject = `Sol·licitud Projecta't (${getVal("nom")} ${getVal("cognoms")})`;
 
     await transporter.sendMail({
       from: `"Projecta't" <${process.env.EMAIL_USER}>`,
@@ -308,7 +285,7 @@ const informePdfBytes = await informeDoc.save();
     return res.status(200).json({ ok: true });
 
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: err.message });
+    console.error("ERROR REAL:", err);
+    return res.status(500).json({ error: err.message || "Server error" });
   }
 }
