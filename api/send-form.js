@@ -397,12 +397,6 @@ const safeSetInformeText = (fieldNames, value) => {
   }
 };
 
-// Dades del formulari
-const nomComplet = `${getVal("nom")} ${getVal("cognoms")}`.trim();
-const dniNie = getVal("dni");
-const telefon = getVal("telefon");
-const email = getVal("email");
-
 // Omplir camps (IMPORTANT: flexible per noms reals del PDF)
 safeSetInformeText(
   ["Nom i cognoms", "Nom i cognoms:"],
