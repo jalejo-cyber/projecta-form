@@ -444,13 +444,12 @@ const informePdfBytes = await informeDoc.save();
 
 
 // =====================================================
-// 📎 ADJUNTS (AMB NOMS PERSONALITZATS - FIX)
+// 📎 ADJUNTS (AMB NOMS PERSONALITZATS)
 // =====================================================
 
 const nomComplet = `${getVal("nom")} ${getVal("cognoms")}`.trim();
 const dni = getVal("dni");
 
-// 👉 PDFs generats
 const attachments = [
   {
     filename: `Annex ${nomComplet}.pdf`,
@@ -466,7 +465,6 @@ const attachments = [
   }
 ];
 
-// 👉 Detectar tipus de fitxer pujat
 const detectFileType = (fieldName, originalName) => {
   const name = `${fieldName} ${originalName}`.toLowerCase();
 
@@ -487,10 +485,7 @@ for (const [fieldName, fileField] of Object.entries(filesObj)) {
     if (typeof file.size === "number" && file.size <= 0) continue;
 
     const fileBuffer = fs.readFileSync(file.filepath);
-
     const baseName = detectFileType(fieldName, file.originalFilename || "");
-
-    // ✅ extensió real del fitxer
     const ext = path.extname(file.originalFilename || "") || ".pdf";
 
     attachments.push({
@@ -515,7 +510,6 @@ const transporter = nodemailer.createTransport({
 
 const subject = `Sol·licitud Projecta't (${nomComplet})`;
 
-// 👉 Email admin (tots els documents)
 await transporter.sendMail({
   from: `"Projecta't" <${process.env.EMAIL_USER}>`,
   to: "jalejo@fomentformacio.com",
@@ -523,7 +517,6 @@ await transporter.sendMail({
   attachments
 });
 
-// 👉 Email participant (tots els documents també)
 await transporter.sendMail({
   from: process.env.EMAIL_USER,
   to: getVal("email"),
@@ -532,4 +525,11 @@ await transporter.sendMail({
   attachments
 });
 
+// 👇 AIXÒ ÉS CLAU (no ho perdis)
 return res.status(200).json({ ok: true });
+
+} catch (err) {
+  console.error("ERROR REAL:", err);
+  return res.status(500).json({ error: err.message || "Server error" });
+}
+}
