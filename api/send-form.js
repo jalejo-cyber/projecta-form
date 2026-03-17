@@ -38,16 +38,8 @@ export default async function handler(req, res) {
       return v === "true" || v === "on" || v === "1" || v === true;
     };
 
-    const norm = (s) =>
-      (s ?? "")
-        .toString()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[\s’'".,;:()/\\\-–—]/g, "")
-        .toLowerCase();
-
     // =====================================================
-    // PDF LOAD (ANNEX ORIGINAL INTACTE)
+    // PDF LOAD
     // =====================================================
     const pdfPath = path.join(process.cwd(), "public/template.pdf");
     const existingPdfBytes = fs.readFileSync(pdfPath);
@@ -55,6 +47,14 @@ export default async function handler(req, res) {
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const pdfForm = pdfDoc.getForm();
     const allPdfFields = pdfForm.getFields();
+
+    const norm = (s) =>
+      (s ?? "")
+        .toString()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[\s’'".,;:()/\\\-–—]/g, "")
+        .toLowerCase();
 
     const findField = (candidates) => {
       const list = Array.isArray(candidates) ? candidates : [candidates];
@@ -99,7 +99,9 @@ export default async function handler(req, res) {
       } catch {}
     };
 
-    // ================= ANNEX (TOT IGUAL) =================
+    // =====================================================
+    // DADES PERSONALS
+    // =====================================================
     safeSetTextSmart("Nom participant", getVal("nom"));
     safeSetTextSmart("Cognoms participant", getVal("cognoms"));
     safeSetTextSmart(["Nom sentitat participant", "Nom sentit participant"], getVal("nomSentit"));
@@ -124,9 +126,9 @@ export default async function handler(req, res) {
 
     safeSelectSmart("Gènere", getVal("genere"));
 
-    // ... (NO TOCO RES MÉS DEL TEU ANNEX)
-
-    // SIGNATURA ANNEX
+    // =====================================================
+    // SIGNATURA + DATA
+    // =====================================================
     const page = pdfDoc.getPages()[0];
     const sigB64 = (getVal("signature") || "").replace(/^data:image\/png;base64,/, "");
 
