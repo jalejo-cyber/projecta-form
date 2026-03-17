@@ -444,26 +444,64 @@ const informePdfBytes = await informeDoc.save();
     // =====================================================
     // ADJUNTS
     // =====================================================
-    const attachments = [
-      { filename: "solicitud-projectat.pdf", content: pdfBytes },
-      { filename: "acords.pdf", content: acordsPdfBytes },
-      { filename: "informe-orientacio.pdf", content: informePdfBytes }
-    ];
+    // =====================================================
+// 📎 ADJUNTS (AMB NOMS PERSONALITZATS)
+// =====================================================
 
-    const filesObj = files || {};
-    for (const [fieldName, fileField] of Object.entries(filesObj)) {
-      const list = Array.isArray(fileField) ? fileField : [fileField];
-      for (const file of list) {
-        if (!file?.filepath) continue;
-        if (file.size <= 0) continue;
+const nomComplet = `${getVal("nom")} ${getVal("cognoms")}`.trim();
+const dni = getVal("dni");
 
-        attachments.push({
-          filename: file.originalFilename || fieldName,
-          content: fs.readFileSync(file.filepath)
-        });
-      }
-    }
+// 👉 Annex principal
+const attachments = [
+  {
+    filename: `Annex ${nomComplet}.pdf`,
+    content: pdfBytes,
+  },
+  {
+    filename: `Acords ${nomComplet}.pdf`,
+    content: acordsPdfBytes,
+  },
+  {
+    filename: `Informe_personaorientada_${dni}.pdf`,
+    content: informePdfBytes,
+  }
+];
 
+// 👉 Map per detectar fitxers pujats
+const detectFileType = (fieldName, originalName) => {
+  const name = `${fieldName} ${originalName}`.toLowerCase();
+
+if (fieldName === "dniFile") return `DNI ${nomComplet}`;
+if (fieldName === "vidaLaboral") return `Vida Laboral ${nomComplet}`;
+if (fieldName === "cv") return `CV ${nomComplet}`;
+
+  // fallback si no detecta
+  return `${nomComplet}`;
+};
+
+const filesObj = files || {};
+
+for (const [fieldName, fileField] of Object.entries(filesObj)) {
+  const list = Array.isArray(fileField) ? fileField : [fileField];
+
+  for (const file of list) {
+    if (!file?.filepath) continue;
+    if (typeof file.size === "number" && file.size <= 0) continue;
+
+    const fileBuffer = fs.readFileSync(file.filepath);
+
+    const baseName = detectFileType(fieldName, file.originalFilename || "");
+
+    attachments.push({
+      filename: `${baseName}.pdf`,
+      content: fileBuffer,
+      contentType: file.mimetype || "application/octet-stream"
+      const ext = path.extname(file.originalFilename || "") || ".pdf";
+
+filename: `${baseName}${ext}`,
+    });
+  }
+}
     // =====================================================
     // EMAIL
     // =====================================================
