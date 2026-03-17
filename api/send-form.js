@@ -132,60 +132,129 @@ export default async function handler(req, res) {
     pdfForm.updateFieldAppearances();
     const pdfBytes = await pdfDoc.save();
 
-    // =====================================================
-    // 2) ACORDS
-    // =====================================================
-    const acordsDoc = await PDFDocument.load(
-      fs.readFileSync(path.join(process.cwd(), "public/Acords.pdf"))
+   // =====================================================
+// 2) ACORDS (FIX REAL)
+// =====================================================
+const acordsDoc = await PDFDocument.load(
+  fs.readFileSync(path.join(process.cwd(), "public/Acords.pdf"))
+);
+
+const acordsForm = acordsDoc.getForm();
+const acordsFields = acordsForm.getFields();
+const acordsPage = acordsDoc.getPages()[0];
+const font = await acordsDoc.embedFont(StandardFonts.Helvetica);
+
+// 🔍 find tolerant
+const findAcordField = (candidates) => {
+  const list = Array.isArray(candidates) ? candidates : [candidates];
+  const normCandidates = list.map(norm).filter(Boolean);
+
+  for (const cand of normCandidates) {
+    const exact = acordsFields.find(f => norm(f.getName()) === cand);
+    if (exact) return exact;
+  }
+
+  for (const cand of normCandidates) {
+    const partial = acordsFields.find(f => norm(f.getName()).includes(cand));
+    if (partial) return partial;
+  }
+
+  return null;
+};
+
+const setAcord = (names, value) => {
+  const f = findAcordField(names);
+  if (f?.setText) f.setText(value ?? "");
+};
+
+// ✅ ARA FUNCIONARÀ SEGUR
+setAcord(
+  ["Nom i cognom", "persona orientada"],
+  nomComplet
+);
+
+setAcord(
+  ["dni", "nie"],
+  dniNie
+);
+
+setAcord(
+  ["data"],
+  formattedSignatureDate
+);
+
+// Signatura (la teva ja OK)
+if (sigB64) {
+  const img = await acordsDoc.embedPng(sigB64);
+  acordsPage.drawImage(img, {
+    x: 100,
+    y: 80,
+    width: 160,
+    height: 50
+  });
+}
+
+acordsForm.updateFieldAppearances(font);
+const acordsPdfBytes = await acordsDoc.save();
+
+   // =====================================================
+// 3) INFORME (FIX REAL)
+// =====================================================
+const informeDoc = await PDFDocument.load(
+  fs.readFileSync(path.join(process.cwd(), "public/Informe.pdf"))
+);
+
+const informeForm = informeDoc.getForm();
+const informeFields = informeForm.getFields();
+
+// 🔍 find tolerant
+const findInformeField = (candidates) => {
+  const list = Array.isArray(candidates) ? candidates : [candidates];
+  const normCandidates = list.map(norm).filter(Boolean);
+
+  for (const cand of normCandidates) {
+    const exact = informeFields.find(f => norm(f.getName()) === cand);
+    if (exact) return exact;
+  }
+
+  for (const cand of normCandidates) {
+    const partial = informeFields.find(f =>
+      norm(f.getName()).includes(cand)
     );
-    const acordsForm = acordsDoc.getForm();
-    const acordsPage = acordsDoc.getPages()[0];
-    const font = await acordsDoc.embedFont(StandardFonts.Helvetica);
+    if (partial) return partial;
+  }
 
-    const setAcord = (name, val) => {
-      try {
-        acordsForm.getTextField(name).setText(val);
-      } catch {}
-    };
+  return null;
+};
 
-    setAcord("Nom i cognom persona orientada", nomComplet);
-    setAcord("DNI / NIE", dniNie);
-    setAcord("Data", formattedSignatureDate);
+const setInforme = (names, value) => {
+  const f = findInformeField(names);
+  if (f?.setText) f.setText(value ?? "");
+};
 
-    if (sigB64) {
-      const img = await acordsDoc.embedPng(sigB64);
-      acordsPage.drawImage(img, {
-        x: 100,
-        y: 80,
-        width: 160,
-        height: 50
-      });
-    }
+// ✅ AQUESTS ARA SÍ QUE ENCAIXARAN
+setInforme(
+  ["nom", "cognom"],
+  nomComplet
+);
 
-    acordsForm.updateFieldAppearances(font);
-    const acordsPdfBytes = await acordsDoc.save();
+setInforme(
+  ["nif", "dni"],
+  dniNie
+);
 
-    // =====================================================
-    // 3) INFORME
-    // =====================================================
-    const informeDoc = await PDFDocument.load(
-      fs.readFileSync(path.join(process.cwd(), "public/Informe.pdf"))
-    );
-    const informeForm = informeDoc.getForm();
+setInforme(
+  ["telefon"],
+  getVal("telefon")
+);
 
-    const setInforme = (name, val) => {
-      try {
-        informeForm.getTextField(name).setText(val);
-      } catch {}
-    };
+setInforme(
+  ["correu", "email"],
+  getVal("email")
+);
 
-    setInforme("Nom i cognoms:", nomComplet);
-    setInforme("NIF:", dniNie);
-    setInforme("Telèfon de contacte:", getVal("telefon"));
-    setInforme("Correu electrònic:", getVal("email"));
-
-    informeForm.updateFieldAppearances();
-    const informePdfBytes = await informeDoc.save();
+informeForm.updateFieldAppearances();
+const informePdfBytes = await informeDoc.save();
 
     // =====================================================
     // ADJUNTS
