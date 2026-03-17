@@ -343,8 +343,8 @@ export default async function handler(req, res) {
     if (sigB64) {
       const sigImgAcords = await acordsDoc.embedPng(sigB64);
       acordsPage.drawImage(sigImgAcords, {
-        x: 283,
-        y: 57,
+        x: 180,
+        y: 80,
         width: 160,
         height: 50
       });
