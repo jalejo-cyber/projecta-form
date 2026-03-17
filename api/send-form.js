@@ -441,17 +441,16 @@ setInformeIndex(["telefon"], 1, getVal("telefon"));
 setInforme(["correu"], getVal("email"));
 
 const informePdfBytes = await informeDoc.save();
-    // =====================================================
-    // ADJUNTS
-    // =====================================================
-    // =====================================================
-// 📎 ADJUNTS (AMB NOMS PERSONALITZATS)
+
+
+// =====================================================
+// 📎 ADJUNTS (AMB NOMS PERSONALITZATS - FIX)
 // =====================================================
 
 const nomComplet = `${getVal("nom")} ${getVal("cognoms")}`.trim();
 const dni = getVal("dni");
 
-// 👉 Annex principal
+// 👉 PDFs generats
 const attachments = [
   {
     filename: `Annex ${nomComplet}.pdf`,
@@ -467,15 +466,14 @@ const attachments = [
   }
 ];
 
-// 👉 Map per detectar fitxers pujats
+// 👉 Detectar tipus de fitxer pujat
 const detectFileType = (fieldName, originalName) => {
   const name = `${fieldName} ${originalName}`.toLowerCase();
 
-if (fieldName === "dniFile") return `DNI ${nomComplet}`;
-if (fieldName === "vidaLaboral") return `Vida Laboral ${nomComplet}`;
-if (fieldName === "cv") return `CV ${nomComplet}`;
+  if (name.includes("dni")) return `DNI ${nomComplet}`;
+  if (name.includes("vida")) return `Vida Laboral ${nomComplet}`;
+  if (name.includes("cv")) return `CV ${nomComplet}`;
 
-  // fallback si no detecta
   return `${nomComplet}`;
 };
 
@@ -492,48 +490,46 @@ for (const [fieldName, fileField] of Object.entries(filesObj)) {
 
     const baseName = detectFileType(fieldName, file.originalFilename || "");
 
+    // ✅ extensió real del fitxer
+    const ext = path.extname(file.originalFilename || "") || ".pdf";
+
     attachments.push({
-      filename: `${baseName}.pdf`,
+      filename: `${baseName}${ext}`,
       content: fileBuffer,
       contentType: file.mimetype || "application/octet-stream"
-      const ext = path.extname(file.originalFilename || "") || ".pdf";
-
-filename: `${baseName}${ext}`,
     });
   }
 }
-    // =====================================================
-    // EMAIL
-    // =====================================================
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
 
-    const subject = `Sol·licitud Projecta't (${getVal("nom")} ${getVal("cognoms")})`;
+// =====================================================
+// 📧 EMAIL
+// =====================================================
 
-    await transporter.sendMail({
-      from: `"Projecta't" <${process.env.EMAIL_USER}>`,
-      to: "jalejo@fomentformacio.com",
-      subject,
-      attachments
-    });
-
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: getVal("email"),
-      subject,
-      text: "Adjunt tens tots els documents.",
-      attachments
-    });
-
-    return res.status(200).json({ ok: true });
-
-  } catch (err) {
-    console.error("ERROR REAL:", err);
-    return res.status(500).json({ error: err.message || "Server error" });
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
-}
+});
+
+const subject = `Sol·licitud Projecta't (${nomComplet})`;
+
+// 👉 Email admin (tots els documents)
+await transporter.sendMail({
+  from: `"Projecta't" <${process.env.EMAIL_USER}>`,
+  to: "jalejo@fomentformacio.com",
+  subject,
+  attachments
+});
+
+// 👉 Email participant (tots els documents també)
+await transporter.sendMail({
+  from: process.env.EMAIL_USER,
+  to: getVal("email"),
+  subject,
+  text: "Adjunt tens tots els documents.",
+  attachments
+});
+
+return res.status(200).json({ ok: true });
