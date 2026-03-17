@@ -317,81 +317,130 @@ export default async function handler(req, res) {
 
 
     // =====================================================
-    // ➕ ACORDS (AFEgit)
-    // =====================================================
-    const acordsDoc = await PDFDocument.load(
-      fs.readFileSync(path.join(process.cwd(), "public/Acords.pdf"))
+// ➕ ACORDS (FIX)
+// =====================================================
+const acordsDoc = await PDFDocument.load(
+  fs.readFileSync(path.join(process.cwd(), "public/Acords.pdf"))
+);
+
+const acordsForm = acordsDoc.getForm();
+const acordsFields = acordsForm.getFields();
+const acordsPage = acordsDoc.getPages()[0];
+
+// 🔧 MATCH MILLORAT (exacte → conté)
+const findAcordField = (candidates) => {
+  const list = Array.isArray(candidates) ? candidates : [candidates];
+  const normCandidates = list.map(norm).filter(Boolean);
+
+  // 1. EXACTE
+  for (const cand of normCandidates) {
+    const f = acordsFields.find(x => norm(x.getName()) === cand);
+    if (f) return f;
+  }
+
+  // 2. CONTÉ (fallback)
+  for (const cand of normCandidates) {
+    const f = acordsFields.find(x => norm(x.getName()).includes(cand));
+    if (f) return f;
+  }
+
+  return null;
+};
+
+const setAcord = (names, val) => {
+  const f = findAcordField(names);
+  if (f?.setText) f.setText(val ?? "");
+};
+
+// ✅ NOM PERSONA ORIENTADA (FIX CLAR)
+setAcord(
+  [
+    "Nom i cognom persona orientada",
+    "Nom i cognoms persona orientada",
+    "persona orientada"
+  ],
+  `${getVal("nom")} ${getVal("cognoms")}`
+);
+
+setAcord(["dni", "nie"], getVal("dni"));
+setAcord(["data"], formattedSignatureDate);
+
+if (sigB64) {
+  const img = await acordsDoc.embedPng(sigB64);
+  acordsPage.drawImage(img, {
+    x: 100,
+    y: 80,
+    width: 160,
+    height: 50
+  });
+}
+
+const acordsPdfBytes = await acordsDoc.save();
+
+
+// =====================================================
+// ➕ INFORME (FIX)
+// =====================================================
+const informeDoc = await PDFDocument.load(
+  fs.readFileSync(path.join(process.cwd(), "public/Informe.pdf"))
+);
+
+const informeForm = informeDoc.getForm();
+const informeFields = informeForm.getFields();
+
+// 🔧 TROBAR TOTS (per duplicats)
+const findAllInformeFields = (candidates) => {
+  const list = Array.isArray(candidates) ? candidates : [candidates];
+  const normCandidates = list.map(norm).filter(Boolean);
+
+  let results = [];
+
+  for (const cand of normCandidates) {
+    const found = informeFields.filter(x =>
+      norm(x.getName()).includes(cand)
     );
+    results.push(...found);
+  }
 
-    const acordsForm = acordsDoc.getForm();
-    const acordsFields = acordsForm.getFields();
-    const acordsPage = acordsDoc.getPages()[0];
+  return results;
+};
 
-    const findAcordField = (candidates) => {
-      const list = Array.isArray(candidates) ? candidates : [candidates];
-      const normCandidates = list.map(norm).filter(Boolean);
+// 🔧 SET NORMAL (primer match)
+const setInforme = (names, val) => {
+  const fields = findAllInformeFields(names);
+  const f = fields[0];
+  if (f?.setText) f.setText(val ?? "");
+};
 
-      for (const cand of normCandidates) {
-        const f = acordsFields.find(x => norm(x.getName()).includes(cand));
-        if (f) return f;
-      }
-      return null;
-    };
+// 🔧 SET PER INDEX (quan hi ha duplicats)
+const setInformeIndex = (names, index, val) => {
+  const fields = findAllInformeFields(names);
+  if (fields[index]?.setText) {
+    fields[index].setText(val ?? "");
+  }
+};
 
-    const setAcord = (names, val) => {
-      const f = findAcordField(names);
-      if (f?.setText) f.setText(val ?? "");
-    };
+// ✅ NOM PERSONA ORIENTADA (FIX)
+setInforme(
+  [
+    "Nom i cognoms",
+    "Nom i cognoms persona orientada"
+  ],
+  `${getVal("nom")} ${getVal("cognoms")}`
+);
 
-    setAcord(["nom", "persona"], `${getVal("nom")} ${getVal("cognoms")}`);
-    setAcord(["dni", "nie"], getVal("dni"));
-    setAcord(["data"], formattedSignatureDate);
+// ✅ NIF
+setInforme(["nif"], getVal("dni"));
 
-    if (sigB64) {
-      const img = await acordsDoc.embedPng(sigB64);
-      acordsPage.drawImage(img, {
-        x: 100,
-        y: 80,
-        width: 160,
-        height: 50
-      });
-    }
+// ❗ TELÈFON → IMPORTANT (2 camps iguals)
+// 0 = entitat
+// 1 = persona orientada
+setInformeIndex(["telefon"], 1, getVal("telefon"));
 
-    const acordsPdfBytes = await acordsDoc.save();
+// ✅ EMAIL (normalment no duplicat)
+setInforme(["correu"], getVal("email"));
 
-    // =====================================================
-    // ➕ INFORME (AFEgit)
-    // =====================================================
-    const informeDoc = await PDFDocument.load(
-      fs.readFileSync(path.join(process.cwd(), "public/Informe.pdf"))
-    );
-
-    const informeForm = informeDoc.getForm();
-    const informeFields = informeForm.getFields();
-
-    const findInformeField = (candidates) => {
-      const list = Array.isArray(candidates) ? candidates : [candidates];
-      const normCandidates = list.map(norm).filter(Boolean);
-
-      for (const cand of normCandidates) {
-        const f = informeFields.find(x => norm(x.getName()).includes(cand));
-        if (f) return f;
-      }
-      return null;
-    };
-
-    const setInforme = (names, val) => {
-      const f = findInformeField(names);
-      if (f?.setText) f.setText(val ?? "");
-    };
-
-    setInforme(["persona", "cognom"], `${getVal("nom")} ${getVal("cognoms")}`);
-    setInforme(["nif"], getVal("dni"));
-    setInforme(["telefon"], getVal("telefon"));
-    setInforme(["correu"], getVal("email"));
-
-    const informePdfBytes = await informeDoc.save();
-
+const informePdfBytes = await informeDoc.save();
     // =====================================================
     // ADJUNTS
     // =====================================================
