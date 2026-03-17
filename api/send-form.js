@@ -352,6 +352,80 @@ export default async function handler(req, res) {
 
     acordsForm.updateFieldAppearances(helvetica);
     const acordsPdfBytes = await acordsDoc.save();
+    // =====================================================
+// 3) PDF INFORME PERSONA ORIENTADA
+// =====================================================
+const informePath = path.join(process.cwd(), "public/Informe.pdf");
+const informeBytes = fs.readFileSync(informePath);
+
+const informeDoc = await PDFDocument.load(informeBytes);
+const informeForm = informeDoc.getForm();
+const informeFields = informeForm.getFields();
+
+// Helper reutilitzat
+const findInformeField = (candidates) => {
+  const list = Array.isArray(candidates) ? candidates : [candidates];
+  const normCandidates = list.map(norm).filter(Boolean);
+
+  // match exacte
+  for (const cand of normCandidates) {
+    const exact = informeFields.find((f) => norm(f.getName()) === cand);
+    if (exact) return exact;
+  }
+
+  // match parcial
+  for (const cand of normCandidates) {
+    const partial = informeFields.find((f) =>
+      norm(f.getName()).includes(cand)
+    );
+    if (partial) return partial;
+  }
+
+  return null;
+};
+
+const safeSetInformeText = (fieldNames, value) => {
+  try {
+    const field = findInformeField(fieldNames);
+    if (!field || typeof field.setText !== "function") {
+      console.warn("[INFORME] Camp no trobat:", fieldNames);
+      return;
+    }
+    field.setText(value ?? "");
+  } catch (e) {
+    console.warn("[INFORME] Error:", fieldNames, e?.message);
+  }
+};
+
+// Dades del formulari
+const nomComplet = `${getVal("nom")} ${getVal("cognoms")}`.trim();
+const dniNie = getVal("dni");
+const telefon = getVal("telefon");
+const email = getVal("email");
+
+// Omplir camps (IMPORTANT: flexible per noms reals del PDF)
+safeSetInformeText(
+  ["Nom i cognoms", "Nom i cognoms:"],
+  nomComplet
+);
+
+safeSetInformeText(
+  ["NIF", "NIF:"],
+  dniNie
+);
+
+safeSetInformeText(
+  ["Telèfon de contacte", "Telefon de contacte"],
+  telefon
+);
+
+safeSetInformeText(
+  ["Correu electrònic", "Correu electronic"],
+  email
+);
+
+informeForm.updateFieldAppearances();
+const informePdfBytes = await informeDoc.save();
 
     // =====================================================
     // ADJUNTS
@@ -359,6 +433,7 @@ export default async function handler(req, res) {
     const attachments = [
       { filename: "solicitud-projectat.pdf", content: pdfBytes },
       { filename: "acords.pdf", content: acordsPdfBytes }
+      { filename: "informe-orientacio.pdf", content: informePdfBytes }
     ];
 
     const filesObj = files || {};
@@ -405,9 +480,10 @@ export default async function handler(req, res) {
       subject,
       text: "Adjunt tens el teu PDF signat i el document d'acords.",
       attachments: [
-        { filename: "solicitud-projectat.pdf", content: pdfBytes },
-        { filename: "acords.pdf", content: acordsPdfBytes }
-      ]
+  { filename: "solicitud-projectat.pdf", content: pdfBytes },
+  { filename: "acords.pdf", content: acordsPdfBytes },
+  { filename: "informe-orientacio.pdf", content: informePdfBytes }
+]
     });
 
     return res.status(200).json({ ok: true });
