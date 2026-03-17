@@ -48,22 +48,22 @@ export default async function handler(req, res) {
         .replace(/[\s’'".,;:()/\\\-–—]/g, "")
         .toLowerCase();
 
-    // Data igual que al formulari principal: es genera en el moment de signar/enviar
-    const todaySignature = new Date();
+    const today = new Date();
     const formattedSignatureDate =
-      `${String(todaySignature.getDate()).padStart(2, "0")}-` +
-      `${String(todaySignature.getMonth() + 1).padStart(2, "0")}-` +
-      todaySignature.getFullYear();
+      `${String(today.getDate()).padStart(2, "0")}-` +
+      `${String(today.getMonth() + 1).padStart(2, "0")}-` +
+      today.getFullYear();
 
     const sigB64 = (getVal("signature") || "").replace(/^data:image\/png;base64,/, "");
 
+    const nomComplet = `${getVal("nom")} ${getVal("cognoms")}`.trim();
+    const dniNie = getVal("dni");
+
     // =====================================================
-    // 1) PDF PRINCIPAL: TEMPLATE / ANNEX
+    // 1) PDF PRINCIPAL
     // =====================================================
     const pdfPath = path.join(process.cwd(), "public/template.pdf");
-    const existingPdfBytes = fs.readFileSync(pdfPath);
-
-    const pdfDoc = await PDFDocument.load(existingPdfBytes);
+    const pdfDoc = await PDFDocument.load(fs.readFileSync(pdfPath));
     const pdfForm = pdfDoc.getForm();
     const allPdfFields = pdfForm.getFields();
 
@@ -71,182 +71,51 @@ export default async function handler(req, res) {
       const list = Array.isArray(candidates) ? candidates : [candidates];
       const normCandidates = list.map(norm).filter(Boolean);
 
-      // 1) Match exacte
       for (const cand of normCandidates) {
         const exact = allPdfFields.find((f) => norm(f.getName()) === cand);
         if (exact) return exact;
       }
 
-      // 2) Match parcial
       for (const cand of normCandidates) {
-        const partial = allPdfFields.find((f) => norm(f.getName()).includes(cand));
+        const partial = allPdfFields.find((f) =>
+          norm(f.getName()).includes(cand)
+        );
         if (partial) return partial;
       }
 
       return null;
     };
 
-    const safeSetTextSmart = (fieldNameCandidates, value) => {
-      try {
-        const field = findField(fieldNameCandidates);
-        if (!field || typeof field.setText !== "function") {
-          console.warn("[PDF] TextField no trobat per:", fieldNameCandidates);
-          return;
-        }
-        field.setText(value ?? "");
-      } catch (e) {
-        console.warn("[PDF] Error setText:", fieldNameCandidates, e?.message);
-      }
+    const safeSetText = (names, value) => {
+      const f = findField(names);
+      if (f?.setText) f.setText(value ?? "");
     };
 
-    const safeSelectSmart = (fieldNameCandidates, value) => {
-      try {
-        if (!value) return;
-        const field = findField(fieldNameCandidates);
-        if (!field || typeof field.select !== "function") {
-          console.warn("[PDF] Dropdown no trobat per:", fieldNameCandidates);
-          return;
-        }
-        field.select(value);
-      } catch (e) {
-        console.warn("[PDF] Error select:", fieldNameCandidates, e?.message);
-      }
+    const safeSelect = (names, value) => {
+      const f = findField(names);
+      if (f?.select && value) f.select(value);
     };
 
-    const safeCheckSmart = (fieldNameCandidates, checked) => {
-      try {
-        if (!checked) return;
-        const field = findField(fieldNameCandidates);
-        if (!field || typeof field.check !== "function") {
-          console.warn("[PDF] CheckBox no trobat per:", fieldNameCandidates);
-          return;
-        }
-        field.check();
-      } catch (e) {
-        console.warn("[PDF] Error check:", fieldNameCandidates, e?.message);
-      }
+    const safeCheck = (names, checked) => {
+      const f = findField(names);
+      if (f?.check && checked) f.check();
     };
 
-    // =====================================================
-    // DADES PERSONALS
-    // =====================================================
-    safeSetTextSmart("Nom participant", getVal("nom"));
-    safeSetTextSmart("Cognoms participant", getVal("cognoms"));
-    safeSetTextSmart(["Nom sentitat participant", "Nom sentit participant"], getVal("nomSentit"));
-    safeSetTextSmart("Document d'identitat", getVal("dni"));
+    // DADES
+    safeSetText("Nom participant", getVal("nom"));
+    safeSetText("Cognoms participant", getVal("cognoms"));
+    safeSetText("Document d'identitat", dniNie);
+    safeSetText("Correu electrònic participant", getVal("email"));
+    safeSetText("Telèfon", getVal("telefon"));
 
-    const rawDate = getVal("dataNaixement");
-    let formattedBirthDate = "";
-    if (rawDate && rawDate.includes("-")) {
-      const [y, m, d] = rawDate.split("-");
-      formattedBirthDate = `${d}-${m}-${y}`;
-    }
-    safeSetTextSmart(["Data de naixament", "Data de naixement"], formattedBirthDate);
+    safeSelect("Gènere", getVal("genere"));
 
-    safeSetTextSmart("País d'origen", getVal("paisOrigen"));
-    safeSetTextSmart("NASS", getVal("nass"));
-    safeSetTextSmart("Adreça participant", getVal("adrecaParticipant"));
-    safeSetTextSmart("Comarca participant", getVal("comarcaParticipant"));
-    safeSetTextSmart("Població participant", getVal("poblacioParticipant"));
-    safeSetTextSmart(["Codi postal particiapnt", "Codi postal participant"], getVal("cpParticipant"));
-    safeSetTextSmart("Correu electrònic participant", getVal("email"));
-    safeSetTextSmart("Telèfon", getVal("telefon"));
-
-    safeSelectSmart("Gènere", getVal("genere"));
-
-    // =====================================================
-    // DADES PROFESSIONALS
-    // =====================================================
-    safeSelectSmart(
-      ["Interès a participar a l'acció formativa", "Interès a participar en aquest procés d’orientació"],
-      getVal("interes")
-    );
-    safeSelectSmart("Estudis", getVal("estudis"));
-    safeSelectSmart(
-      ["Categoria professional (només persones ocuapdes)", "Categoria professional"],
-      getVal("categoriaProfessional")
-    );
-
-    // =====================================================
-    // SITUACIÓ LABORAL
-    // =====================================================
-    const ocupat = isChecked("ocupat");
-    safeCheckSmart(["Ocupatada Consigneuhi codi3", "Ocupat/ada"], ocupat);
-
-    if (ocupat && getVal("codi3")) {
-      safeSelectSmart(["Consigna", "codi3", "Règim", "Regim"], getVal("codi3"));
-    }
-
-    safeCheckSmart(["Afectatada ERTO", "Afectada ERTO"], isChecked("erto"));
-    safeCheckSmart(["Cuidadora no professionalCPN", "Cuidadora no professional (CPN)"], isChecked("cpn"));
-
-    // =====================================================
-    // SITUACIONS ESPECÍFIQUES
-    // =====================================================
-    safeCheckSmart(["Diversitat funcional", "Diversitat funcional i/o trastorn mental"], isChecked("diversitat"));
-    safeCheckSmart(["Violència de gènere", "Violencia de genere"], isChecked("violencia"));
-    safeCheckSmart(["Víctima de terrorisme", "Victima de terrorisme"], isChecked("terrorisme"));
-
-    // =====================================================
-    // COM VAS CONÈIXER...
-    // =====================================================
-    const coneixerMap = [
-      { k: "OT", pdf: ["Oficina de Treball", "OT"] },
-      { k: "WebConsorci", pdf: ["Web del Consorci", "Consorci"] },
-      { k: "EntitatFormacio", pdf: ["Entitat de formació", "Entitat de formacio"] },
-      { k: "Agents", pdf: ["Agents econòmics i socials", "Agents economics i socials"] },
-      { k: "Projectat", pdf: ["Projecta’t", "Projectat orientació professional", "Projecta"] },
-      { k: "SOC", pdf: ["Cercador de cursos del SOC", "SOC"] },
-      { k: "WebFPG", pdf: ["Web: fp.gencat.cat", "fp.gencat.cat", "Web fpgencat"] },
-      { k: "LinkedIn", pdf: ["LinkedIn"] },
-      { k: "EmpresaDifusio", pdf: ["Empresa"] },
-      { k: "TwitterConsorci", pdf: ["Twitter (X) del Consorci", "Twitter Consorci", "@fpo_continua"] },
-      { k: "TwitterOcupacio", pdf: ["Twitter (X) d'Ocupació", "Twitter Ocupacio", "@ocupaciocat"] },
-      { k: "Amics", pdf: ["Amics", "Amics o familiars"] },
-      { k: "Premsa", pdf: ["Premsa", "ràdio o televisió", "mitjans comunicació", "mitjans comunicacio"] },
-      { k: "AltresDifusio", pdf: ["Altres"] }
-    ];
-
-    for (const item of coneixerMap) {
-      safeCheckSmart(item.pdf, isChecked(item.k));
-    }
-
-    // =====================================================
-    // EMPRESA
-    // =====================================================
-    safeSetTextSmart(["Rao social", "Raó social"], getVal("raoSocial"));
-    safeSetTextSmart(["CIF_empresa", "CIF empresa", "CIF"], getVal("cif"));
-    safeSetTextSmart(
-      ["Núm. d’inscripció a la Seguretat Social", "Num. d'inscripcio a la Seguretat Social"],
-      getVal("nassEmpresa")
-    );
-    safeSetTextSmart("Adreça del centre de treball", getVal("adrecaEmpresa"));
-    safeSetTextSmart("Comarca empresa", getVal("comarcaEmpresa"));
-    safeSetTextSmart("Població empresa", getVal("poblacioEmpresa"));
-    safeSetTextSmart("Codi postal empresa", getVal("cpEmpresa"));
-    safeSelectSmart(["Mida de l'empresa", "Mida de l’empresa"], getVal("midaEmpresa"));
-
-    // =====================================================
-    // DECLARACIONS
-    // =====================================================
-    safeCheckSmart(["Declaro que he estat informat", "Declaro"], isChecked("declaro"));
-    safeCheckSmart(
-      ["utilitzar les meves dades personals", "dades personals", "rebre informació"],
-      isChecked("autoritzacioDades")
-    );
-    safeCheckSmart(
-      ["la meva imatge/veu", "imatge/veu", "fotografies i/o vídeos", "videos"],
-      isChecked("autoritzacioImatge")
-    );
-
-    // =====================================================
-    // SIGNATURA + DATA AL PDF PRINCIPAL
-    // =====================================================
+    // SIGNATURA
     const page = pdfDoc.getPages()[0];
 
     if (sigB64) {
-      const pngImage = await pdfDoc.embedPng(sigB64);
-      page.drawImage(pngImage, {
+      const img = await pdfDoc.embedPng(sigB64);
+      page.drawImage(img, {
         x: 240,
         y: 160,
         width: 220,
@@ -264,85 +133,28 @@ export default async function handler(req, res) {
     const pdfBytes = await pdfDoc.save();
 
     // =====================================================
-    // 2) PDF ACORDS
+    // 2) ACORDS
     // =====================================================
-    const acordsPath = path.join(process.cwd(), "public/Acords.pdf");
-    const acordsExistingBytes = fs.readFileSync(acordsPath);
-
-    const acordsDoc = await PDFDocument.load(acordsExistingBytes);
+    const acordsDoc = await PDFDocument.load(
+      fs.readFileSync(path.join(process.cwd(), "public/Acords.pdf"))
+    );
     const acordsForm = acordsDoc.getForm();
-    const acordsFields = acordsForm.getFields();
     const acordsPage = acordsDoc.getPages()[0];
-    const helvetica = await acordsDoc.embedFont(StandardFonts.Helvetica);
+    const font = await acordsDoc.embedFont(StandardFonts.Helvetica);
 
-    const findAcordsField = (candidates) => {
-      const list = Array.isArray(candidates) ? candidates : [candidates];
-      const normCandidates = list.map(norm).filter(Boolean);
-
-      // 1) Match exacte
-      for (const cand of normCandidates) {
-        const exact = acordsFields.find((f) => norm(f.getName()) === cand);
-        if (exact) return exact;
-      }
-
-      // 2) Match parcial
-      for (const cand of normCandidates) {
-        const partial = acordsFields.find((f) => norm(f.getName()).includes(cand));
-        if (partial) return partial;
-      }
-
-      return null;
-    };
-
-    const safeSetAcordsText = (fieldNameCandidates, value) => {
+    const setAcord = (name, val) => {
       try {
-        const field = findAcordsField(fieldNameCandidates);
-        if (!field || typeof field.setText !== "function") {
-          console.warn("[ACORDS] TextField no trobat per:", fieldNameCandidates);
-          return;
-        }
-        field.setText(value ?? "");
-      } catch (e) {
-        console.warn("[ACORDS] Error setText:", fieldNameCandidates, e?.message);
-      }
+        acordsForm.getTextField(name).setText(val);
+      } catch {}
     };
 
-    const nomComplet = `${getVal("nom")} ${getVal("cognoms")}`.trim();
-    const dniNie = getVal("dni");
+    setAcord("Nom i cognom persona orientada", nomComplet);
+    setAcord("DNI / NIE", dniNie);
+    setAcord("Data", formattedSignatureDate);
 
-    // Camps del PDF d'acords
-    safeSetAcordsText(
-      [
-        "Nom i cognom persona orientada",
-        "Nom i cognoms persona orientada",
-        "Nom i cognom de la persona orientada"
-      ],
-      nomComplet
-    );
-
-    safeSetAcordsText(
-      [
-        "DNI / NIE",
-        "DNI/NIE",
-        "DNI NIE"
-      ],
-      dniNie
-    );
-
-    // Si hi hagués camp Data, també s'omple amb la mateixa data del formulari principal
-    safeSetAcordsText(
-      [
-        "Data",
-        "Data signatura",
-        "Data de la signatura"
-      ],
-      formattedSignatureDate
-    );
-
-    // Signatura a sobre del lloc de "Signatura de la persona orientada"
     if (sigB64) {
-      const sigImgAcords = await acordsDoc.embedPng(sigB64);
-      acordsPage.drawImage(sigImgAcords, {
+      const img = await acordsDoc.embedPng(sigB64);
+      acordsPage.drawImage(img, {
         x: 100,
         y: 80,
         width: 160,
@@ -350,98 +162,48 @@ export default async function handler(req, res) {
       });
     }
 
-    acordsForm.updateFieldAppearances(helvetica);
+    acordsForm.updateFieldAppearances(font);
     const acordsPdfBytes = await acordsDoc.save();
+
     // =====================================================
-// 3) PDF INFORME PERSONA ORIENTADA
-// =====================================================
-const informePath = path.join(process.cwd(), "public/Informe.pdf");
-const informeBytes = fs.readFileSync(informePath);
-
-const informeDoc = await PDFDocument.load(informeBytes);
-const informeForm = informeDoc.getForm();
-const informeFields = informeForm.getFields();
-
-// Helper reutilitzat
-const findInformeField = (candidates) => {
-  const list = Array.isArray(candidates) ? candidates : [candidates];
-  const normCandidates = list.map(norm).filter(Boolean);
-
-  // match exacte
-  for (const cand of normCandidates) {
-    const exact = informeFields.find((f) => norm(f.getName()) === cand);
-    if (exact) return exact;
-  }
-
-  // match parcial
-  for (const cand of normCandidates) {
-    const partial = informeFields.find((f) =>
-      norm(f.getName()).includes(cand)
+    // 3) INFORME
+    // =====================================================
+    const informeDoc = await PDFDocument.load(
+      fs.readFileSync(path.join(process.cwd(), "public/Informe.pdf"))
     );
-    if (partial) return partial;
-  }
+    const informeForm = informeDoc.getForm();
 
-  return null;
-};
+    const setInforme = (name, val) => {
+      try {
+        informeForm.getTextField(name).setText(val);
+      } catch {}
+    };
 
-const safeSetInformeText = (fieldNames, value) => {
-  try {
-    const field = findInformeField(fieldNames);
-    if (!field || typeof field.setText !== "function") {
-      console.warn("[INFORME] Camp no trobat:", fieldNames);
-      return;
-    }
-    field.setText(value ?? "");
-  } catch (e) {
-    console.warn("[INFORME] Error:", fieldNames, e?.message);
-  }
-};
+    setInforme("Nom i cognoms:", nomComplet);
+    setInforme("NIF:", dniNie);
+    setInforme("Telèfon de contacte:", getVal("telefon"));
+    setInforme("Correu electrònic:", getVal("email"));
 
-// Omplir camps (IMPORTANT: flexible per noms reals del PDF)
-safeSetInformeText(
-  ["Nom i cognoms", "Nom i cognoms:"],
-  nomComplet
-);
-
-safeSetInformeText(
-  ["NIF", "NIF:"],
-  dniNie
-);
-
-safeSetInformeText(
-  ["Telèfon de contacte", "Telefon de contacte"],
-  telefon
-);
-
-safeSetInformeText(
-  ["Correu electrònic", "Correu electronic"],
-  email
-);
-
-informeForm.updateFieldAppearances();
-const informePdfBytes = await informeDoc.save();
+    informeForm.updateFieldAppearances();
+    const informePdfBytes = await informeDoc.save();
 
     // =====================================================
     // ADJUNTS
     // =====================================================
     const attachments = [
       { filename: "solicitud-projectat.pdf", content: pdfBytes },
-      { filename: "acords.pdf", content: acordsPdfBytes }
+      { filename: "acords.pdf", content: acordsPdfBytes },
       { filename: "informe-orientacio.pdf", content: informePdfBytes }
     ];
 
-    const filesObj = files || {};
-    for (const [fieldName, fileField] of Object.entries(filesObj)) {
+    // afegir fitxers pujats
+    for (const fileField of Object.values(files || {})) {
       const list = Array.isArray(fileField) ? fileField : [fileField];
-      for (const file of list) {
-        if (!file?.filepath) continue;
-        if (typeof file.size === "number" && file.size <= 0) continue;
-
-        const fileBuffer = fs.readFileSync(file.filepath);
+      for (const f of list) {
+        if (!f?.filepath || f.size <= 0) continue;
         attachments.push({
-          filename: file.originalFilename || `${fieldName}`,
-          content: fileBuffer,
-          contentType: file.mimetype || "application/octet-stream"
+          filename: f.originalFilename,
+          content: fs.readFileSync(f.filepath)
         });
       }
     }
@@ -457,9 +219,8 @@ const informePdfBytes = await informeDoc.save();
       }
     });
 
-    const subject = `Sol·licitud Projecta't (${getVal("nom")} ${getVal("cognoms")})`;
+    const subject = `Sol·licitud Projecta't (${nomComplet})`;
 
-    // Correu intern: annex + acords + fitxers pujats
     await transporter.sendMail({
       from: `"Projecta't" <${process.env.EMAIL_USER}>`,
       to: "jalejo@fomentformacio.com",
@@ -467,22 +228,18 @@ const informePdfBytes = await informeDoc.save();
       attachments
     });
 
-    // Correu participant: annex + acords
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: getVal("email"),
       subject,
-      text: "Adjunt tens el teu PDF signat i el document d'acords.",
-      attachments: [
-  { filename: "solicitud-projectat.pdf", content: pdfBytes },
-  { filename: "acords.pdf", content: acordsPdfBytes },
-  { filename: "informe-orientacio.pdf", content: informePdfBytes }
-]
+      text: "Adjunt tens tots els documents.",
+      attachments
     });
 
     return res.status(200).json({ ok: true });
+
   } catch (err) {
-    console.error("ERROR REAL:", err);
-    return res.status(500).json({ error: err.message || "Server error" });
+    console.error(err);
+    return res.status(500).json({ error: err.message });
   }
 }
