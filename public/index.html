@@ -43,6 +43,49 @@ cursor: pointer;
   background-size: 20px;
   padding-left: 40px;
 }
+.custom-country {
+  position: relative;
+  flex: 1;
+}
+
+.selected-country {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  background: white;
+}
+
+.country-dropdown {
+  display: none;
+  position: absolute;
+  width: 100%;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 999;
+}
+
+.country-dropdown input {
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-bottom: 1px solid #ccc;
+  outline: none;
+}
+
+.country-item {
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+}
+
+.country-item:hover {
+  background: #f2f2f2;
+}
 .buscar-cif-btn{
 display:flex;
 align-items:center;
@@ -241,10 +284,18 @@ line-height:1.4;
         <div class="row">
           <input type="date" name="dataNaixement" required>
         </div>
-        <div class="row">
-  <select id="paisOrigen" name="paisOrigen" required>
-    <option value="" selected disabled>País d'origen</option>
-  </select>
+        <div class="custom-country">
+  <div id="selectedCountry" class="selected-country">
+    <span>🇪🇸</span> País d'origen
+  </div>
+
+  <div id="countryDropdown" class="country-dropdown">
+    <input type="text" id="countrySearch" placeholder="Buscar país...">
+    <div id="countryList"></div>
+  </div>
+
+  <!-- valor real pel formulari -->
+  <input type="hidden" name="paisOrigen" id="paisOrigen">
 
   <select name="genere" required>
     <option value="">Selecciona gènere</option>
@@ -666,78 +717,81 @@ telInput.addEventListener("input", () => {
     telInput.style.border = "2px solid red";
   }
 });
-const paisSelect = document.getElementById("paisOrigen");
-
-// placeholder
-paisSelect.innerHTML = `<option value="" selected disabled>País d'origen</option>`;
-
-// funció per afegir països
-function pintarPaisos(data) {
-  data
-    .sort((a, b) => a.name.localeCompare(b.name, "ca"))
-    .forEach(p => {
-      const option = document.createElement("option");
-      option.value = p.name;
-      option.textContent = p.name; // 👈 només text (bandera la posem diferent)
-      option.setAttribute("data-flag", p.flag);
-      paisSelect.appendChild(option);
-    });
-}
-
 // ===============================
-// 1️⃣ API (millor endpoint)
+// SELECTOR PAÍS PRO
 // ===============================
-fetch("https://restcountries.com/v3.1/all?fields=name,flags")
+
+const selected = document.getElementById("selectedCountry");
+const dropdown = document.getElementById("countryDropdown");
+const list = document.getElementById("countryList");
+const search = document.getElementById("countrySearch");
+const hiddenInput = document.getElementById("paisOrigen");
+
+let countries = [];
+
+// obrir / tancar
+selected.addEventListener("click", () => {
+  dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+});
+
+// tancar fora
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".custom-country")) {
+    dropdown.style.display = "none";
+  }
+});
+
+// carregar països
+fetch("https://restcountries.com/v3.1/all?fields=name,flags,cca2")
   .then(res => res.json())
   .then(data => {
-    const paisos = data.map(p => ({
-      name: p.name.common,
-      flag: p.flags.svg // 👈 imatge real
-    }));
 
-    pintarPaisos(paisos);
+    const noms = new Intl.DisplayNames(['ca'], { type: 'region' });
 
-    activarBandera();
-  })
-  .catch(() => {
-    console.warn("API ha fallat → fallback complet");
+    countries = data.map(p => ({
+      name: noms.of(p.cca2) || p.name.common,
+      flag: p.flags.svg
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name, "ca"));
 
-    // ===============================
-    // 2️⃣ FALLBACK COMPLET (ISO + emoji)
-    // ===============================
-    const codis = Intl.DisplayNames
-      ? Intl.supportedValuesOf?.("region") || []
-      : [];
-
-    const noms = new Intl.DisplayNames(['es'], { type: 'region' });
-
-    const fallback = codis.map(c => ({
-      name: noms.of(c),
-      flag: `https://flagcdn.com/w40/${c.toLowerCase()}.png`
-    }));
-
-    pintarPaisos(fallback);
-
-    activarBandera();
+    pintar(countries);
   });
 
-// ===============================
-// MOSTRAR BANDERA SELECCIONADA
-// ===============================
-function activarBandera() {
-  paisSelect.addEventListener("change", function () {
-    const selected = this.options[this.selectedIndex];
-    const flag = selected.getAttribute("data-flag");
+// pintar llista
+function pintar(data) {
+  list.innerHTML = "";
 
-    if (flag) {
-      this.style.backgroundImage = `url(${flag})`;
-      this.style.backgroundRepeat = "no-repeat";
-      this.style.backgroundPosition = "10px center";
-      this.style.backgroundSize = "20px";
-      this.style.paddingLeft = "40px";
-    }
+  data.forEach(c => {
+    const div = document.createElement("div");
+    div.className = "country-item";
+
+    div.innerHTML = `
+      <img src="${c.flag}" width="20">
+      <span>${c.name}</span>
+    `;
+
+    div.addEventListener("click", () => {
+      selected.innerHTML = `
+        <img src="${c.flag}" width="20"> ${c.name}
+      `;
+      hiddenInput.value = c.name;
+      dropdown.style.display = "none";
+    });
+
+    list.appendChild(div);
   });
 }
+
+// buscador
+search.addEventListener("input", () => {
+  const value = search.value.toLowerCase();
+
+  const filtrats = countries.filter(c =>
+    c.name.toLowerCase().includes(value)
+  );
+
+  pintar(filtrats);
+});
 
     // ===============================
     // POPUP
