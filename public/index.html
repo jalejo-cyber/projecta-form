@@ -672,38 +672,53 @@ telInput.addEventListener("input", () => {
 
 const paisSelect = document.getElementById("paisOrigen");
 
-// missatge inicial
+// placeholder inicial
 paisSelect.innerHTML = `<option value="" selected disabled>País d'origen</option>`;
 
-// carregar països
+// funció per pintar països
+function pintarPaisos(llista) {
+  llista
+    .sort((a, b) => a.name.localeCompare(b.name, "ca"))
+    .forEach(p => {
+      const option = document.createElement("option");
+      option.value = p.name;
+      option.textContent = `${p.flag} ${p.name}`;
+      paisSelect.appendChild(option);
+    });
+}
+
+// 1️⃣ INTENT API
 fetch("https://restcountries.com/v3.1/all")
   .then(res => res.json())
   .then(data => {
-
-    // ordenar alfabèticament
-    data.sort((a, b) =>
-      a.name.common.localeCompare(b.name.common, "ca")
-    );
-
-    data.forEach(pais => {
-      const option = document.createElement("option");
-
-      option.value = pais.name.common;
-      option.textContent = `${pais.flag} ${pais.name.common}`;
-
-      paisSelect.appendChild(option);
-    });
-
+    const paisos = data.map(p => ({
+      name: p.name.common,
+      flag: p.flag
+    }));
+    pintarPaisos(paisos);
   })
   .catch(error => {
-    console.error("Error carregant països:", error);
 
-    // fallback (per si falla internet)
-    const option = document.createElement("option");
-    option.textContent = "No s'han pogut carregar els països";
-    paisSelect.appendChild(option);
+    console.warn("API ha fallat → fallback local", error);
+
+    // 2️⃣ FALLBACK LOCAL (sempre funciona)
+    const codis = [
+      "ES","FR","IT","DE","PT","GB","US","CA","MX","AR","CO","CL","PE","BR",
+      "CN","JP","KR","IN","RU","AU","NZ","ZA","MA","DZ","TN","EG",
+      "BE","NL","SE","NO","DK","FI","PL","CZ","AT","CH","GR","TR","UA"
+    ];
+
+    const noms = new Intl.DisplayNames(['es'], { type: 'region' });
+
+    const fallback = codis.map(c => ({
+      name: noms.of(c),
+      flag: c.replace(/./g, x =>
+        String.fromCodePoint(127397 + x.charCodeAt())
+      )
+    }));
+
+    pintarPaisos(fallback);
   });
-
 
     // ===============================
     // POPUP
