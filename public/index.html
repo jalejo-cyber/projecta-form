@@ -95,8 +95,7 @@ text-align:center;
 to{ transform: rotate(360deg); }
 }
 </style>
-
-<head>
+  
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/css/intlTelInput.css"/>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -601,12 +600,6 @@ function validarNIF(nif) {
   const dniInput = document.getElementById("dni");
   const dniError = document.getElementById("dniError");
 
-  if (dniInput && dniError) {
-  dniInput.addEventListener("input", () => {
-    ...
-  });
-}
-
   dniInput.addEventListener("input", () => {
     const value = dniInput.value.toUpperCase().trim();
     dniInput.value = value;
@@ -654,17 +647,20 @@ telInput.addEventListener("input", () => {
     // ===============================
     // POPUP
     // ===============================
-    function closePopup(){
-      document.getElementById("successPopup").style.display = "none";
+function closePopup(){
+  document.getElementById("successPopup").style.display = "none";
 
-      // Desbloqueig després d'enviament OK
-      isSubmitting = false;
-      if (!submitBtn) submitBtn = document.querySelector('#projectaForm button[type="submit"]');
-      if (submitBtn) submitBtn.disabled = false;
+  // Desbloqueig després d'enviament OK
+  isSubmitting = false;
+  if (!submitBtn) submitBtn = document.querySelector('#projectaForm button[type="submit"]');
+  if (submitBtn) submitBtn.disabled = false;
 
-      // Per si de cas quedés visible
-      hideLoader();
-    }
+  // Per si de cas quedés visible
+  hideLoader();
+}
+
+// 👉 AFEGEIX AIXÒ JUST DESPRÉS
+window.closePopup = closePopup;
   </script>
 
   <div id="successPopup" class="popup">
