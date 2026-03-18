@@ -405,6 +405,8 @@
         try{
           const formData = new FormData(this);
           formData.append("signature", signaturePad.toDataURL());
+         const numeroSensePrefix = iti.getNumber().replace(/^\+\d+/, "");
+formData.set("telefon", numeroSensePrefix); 
 
           const res = await fetch("/api/send-form", {
             method:"POST",
@@ -527,7 +529,25 @@ function validarNIF(nif) {
   });
 
 });
+const telInput = document.getElementById("telefon");
+const telError = document.getElementById("telefonError");
 
+const iti = window.intlTelInput(telInput, {
+  initialCountry: "es",
+  preferredCountries: ["es", "fr", "it"],
+  separateDialCode: true,
+  utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js"
+});
+
+telInput.addEventListener("input", () => {
+  if (iti.isValidNumber()) {
+    telError.style.display = "none";
+    telInput.style.border = "2px solid green";
+  } else {
+    telError.style.display = "block";
+    telInput.style.border = "2px solid red";
+  }
+});
 
     // ===============================
     // POPUP
