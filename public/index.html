@@ -666,59 +666,78 @@ telInput.addEventListener("input", () => {
     telInput.style.border = "2px solid red";
   }
 });
-// ===============================
-// PAÏSOS DEL MÓN (API OFICIAL)
-// ===============================
-
 const paisSelect = document.getElementById("paisOrigen");
 
-// placeholder inicial
+// placeholder
 paisSelect.innerHTML = `<option value="" selected disabled>País d'origen</option>`;
 
-// funció per pintar països
-function pintarPaisos(llista) {
-  llista
+// funció per afegir països
+function pintarPaisos(data) {
+  data
     .sort((a, b) => a.name.localeCompare(b.name, "ca"))
     .forEach(p => {
       const option = document.createElement("option");
       option.value = p.name;
-      option.textContent = `${p.flag} ${p.name}`;
+      option.textContent = p.name; // 👈 només text (bandera la posem diferent)
+      option.setAttribute("data-flag", p.flag);
       paisSelect.appendChild(option);
     });
 }
 
-// 1️⃣ INTENT API
-fetch("https://restcountries.com/v3.1/all")
+// ===============================
+// 1️⃣ API (millor endpoint)
+// ===============================
+fetch("https://restcountries.com/v3.1/all?fields=name,flags")
   .then(res => res.json())
   .then(data => {
     const paisos = data.map(p => ({
       name: p.name.common,
-      flag: p.flag
+      flag: p.flags.svg // 👈 imatge real
     }));
+
     pintarPaisos(paisos);
+
+    activarBandera();
   })
-  .catch(error => {
+  .catch(() => {
+    console.warn("API ha fallat → fallback complet");
 
-    console.warn("API ha fallat → fallback local", error);
-
-    // 2️⃣ FALLBACK LOCAL (sempre funciona)
-    const codis = [
-      "ES","FR","IT","DE","PT","GB","US","CA","MX","AR","CO","CL","PE","BR",
-      "CN","JP","KR","IN","RU","AU","NZ","ZA","MA","DZ","TN","EG",
-      "BE","NL","SE","NO","DK","FI","PL","CZ","AT","CH","GR","TR","UA"
-    ];
+    // ===============================
+    // 2️⃣ FALLBACK COMPLET (ISO + emoji)
+    // ===============================
+    const codis = Intl.DisplayNames
+      ? Intl.supportedValuesOf?.("region") || []
+      : [];
 
     const noms = new Intl.DisplayNames(['es'], { type: 'region' });
 
     const fallback = codis.map(c => ({
       name: noms.of(c),
-      flag: c.replace(/./g, x =>
-        String.fromCodePoint(127397 + x.charCodeAt())
-      )
+      flag: `https://flagcdn.com/w40/${c.toLowerCase()}.png`
     }));
 
     pintarPaisos(fallback);
+
+    activarBandera();
   });
+
+// ===============================
+// MOSTRAR BANDERA SELECCIONADA
+// ===============================
+function activarBandera() {
+  paisSelect.addEventListener("change", function () {
+    const selected = this.options[this.selectedIndex];
+    const flag = selected.getAttribute("data-flag");
+
+    if (flag) {
+      this.style.backgroundImage = `url(${flag})`;
+      this.style.backgroundRepeat = "no-repeat";
+      this.style.backgroundPosition = "10px center";
+      this.style.backgroundSize = "20px";
+      this.style.paddingLeft = "40px";
+    }
+  });
+}
 
     // ===============================
     // POPUP
