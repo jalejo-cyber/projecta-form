@@ -491,10 +491,13 @@ line-height:1.4;
         try{
           const formData = new FormData(this);
           formData.append("signature", signaturePad.toDataURL());
-         window.onerror = function(message, source, lineno, colno, error) {
-  console.error("ERROR JS:", message, "Línia:", lineno);
-};
-formData.set("telefon", numeroSensePrefix); 
+         let numeroSensePrefix = "";
+
+if (window.iti) {
+  numeroSensePrefix = window.iti.getNumber().replace(/^\+\d+/, "");
+}
+
+formData.set("telefon", numeroSensePrefix);
 
           const res = await fetch("/api/send-form", {
             method:"POST",
@@ -657,6 +660,7 @@ function closePopup(){
 
 // 👉 AFEGEIX AIXÒ JUST DESPRÉS
 window.closePopup = closePopup;
+});
   </script>
 
   <div id="successPopup" class="popup">
