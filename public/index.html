@@ -44,7 +44,6 @@ cursor: pointer;
   padding-left: 40px;
 }
 .custom-country {
-  position: relative;
   flex: 1;
 }
 
@@ -282,17 +281,28 @@ line-height:1.4;
 </span>
         </div>
         <div class="row">
-          <input type="date" name="dataNaixement" required>
-        </div>
-        <div class="custom-country">
-  <div id="selectedCountry" class="selected-country">
-    <span>🇪🇸</span> País d'origen
+
+  <div class="custom-country">
+    <div id="selectedCountry" class="selected-country">
+      País d'origen
+    </div>
+
+    <div id="countryDropdown" class="country-dropdown">
+      <input type="text" id="countrySearch" placeholder="Buscar país...">
+      <div id="countryList"></div>
+    </div>
+
+    <input type="hidden" name="paisOrigen" id="paisOrigen">
   </div>
 
-  <div id="countryDropdown" class="country-dropdown">
-    <input type="text" id="countrySearch" placeholder="Buscar país...">
-    <div id="countryList"></div>
-  </div>
+  <select name="genere" required>
+    <option value="">Selecciona gènere</option>
+    <option value="Home">Home</option>
+    <option value="Dona">Dona</option>
+    <option value="No binari">No binari</option>
+  </select>
+
+</div>
 
   <!-- valor real pel formulari -->
   <input type="hidden" name="paisOrigen" id="paisOrigen">
