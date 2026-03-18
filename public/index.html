@@ -491,7 +491,9 @@ line-height:1.4;
         try{
           const formData = new FormData(this);
           formData.append("signature", signaturePad.toDataURL());
-         const numeroSensePrefix = window.iti.getNumber().replace(/^\+\d+/, "");
+         window.onerror = function(message, source, lineno, colno, error) {
+  console.error("ERROR JS:", message, "Línia:", lineno);
+};
 formData.set("telefon", numeroSensePrefix); 
 
           const res = await fetch("/api/send-form", {
