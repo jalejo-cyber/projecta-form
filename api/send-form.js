@@ -510,6 +510,14 @@ const transporter = nodemailer.createTransport({
 
 const subject = `Sol·licitud Projecta't (${nomComplet})`;
 
+// 👉 NOMÉS ANNEX PER L'USUARI
+const annexOnly = attachments.filter(a =>
+  a.filename.startsWith("Annex ")
+);
+
+// =====================================================
+// 📩 EMAIL ADMIN (TOT)
+// =====================================================
 await transporter.sendMail({
   from: `"Projecta't" <${process.env.EMAIL_USER}>`,
   to: "jalejo@fomentformacio.com",
@@ -517,12 +525,15 @@ await transporter.sendMail({
   attachments
 });
 
+// =====================================================
+// 📩 EMAIL USUARI (NOMÉS ANNEX)
+// =====================================================
 await transporter.sendMail({
   from: process.env.EMAIL_USER,
   to: getVal("email"),
   subject,
-  text: "Adjunt tens tots els documents.",
-  attachments
+  text: "Adjunt tens el teu document.",
+  attachments: annexOnly
 });
 
 // 👇 AIXÒ ÉS CLAU (no ho perdis)
