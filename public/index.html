@@ -96,6 +96,7 @@
   }
 </style>
 <head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/css/intlTelInput.css"/>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sol·licitud Projecta’t</title>
@@ -157,7 +158,11 @@
         </div>
         <div class="row">
           <input type="email" name="email" placeholder="Correu electrònic" required>
-          <input name="telefon" placeholder="Telèfon" required>
+          <input id="telefon" name="telefon" type="tel" required>
+
+<span id="telefonError" style="color:red; display:none; font-size:12px;">
+  El telèfon no és correcte
+</span>
         </div>
       </div>
 
@@ -523,6 +528,7 @@ function validarNIF(nif) {
 
 });
 
+
     // ===============================
     // POPUP
     // ===============================
@@ -545,5 +551,6 @@ function validarNIF(nif) {
       <button onclick="closePopup()">Acceptar</button>
     </div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/intlTelInput.min.js"></script>
 </body>
 </html>
