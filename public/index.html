@@ -245,15 +245,15 @@ line-height:1.4;
   <select id="paisOrigen" name="paisOrigen" required>
     <option value="" selected disabled>País d'origen</option>
   </select>
+
+  <select name="genere" required>
+    <option value="">Selecciona gènere</option>
+    <option value="Home">Home</option>
+    <option value="Dona">Dona</option>
+    <option value="No binari">No binari</option>
+  </select>
 </div>
-        <div class="row">
-          <select name="genere" required>
-            <option value="">Selecciona gènere</option>
-            <option value="Home">Home</option>
-            <option value="Dona">Dona</option>
-            <option value="No binari">No binari</option>
-          </select>
-        </div>
+    <div id="paisDropdown" style="display:none; position:absolute; background:white; border:1px solid #ccc; max-height:200px; overflow:auto; z-index:999;"></div>    
         <div class="row">
           <input name="nass" placeholder="NASS (Seguretat Social)">
           <input name="adrecaParticipant" placeholder="Adreça" required>
@@ -573,39 +573,6 @@ formData.set("telefon", numeroSensePrefix);
         });
       }
 
-      const paisSelect = document.getElementById("paisOrigen");
-
-// tots els països ISO
-const codis = Intl.supportedValuesOf('region');
-
-// idioma català
-const paisos = new Intl.DisplayNames(['ca'], { type: 'region' });
-
-// funció bandera (emoji)
-function getFlagEmoji(countryCode) {
-  return countryCode
-    .toUpperCase()
-    .replace(/./g, char => 
-      String.fromCodePoint(127397 + char.charCodeAt())
-    );
-}
-
-// crear llista ordenada
-const llista = codis
-  .map(code => ({
-    code,
-    name: paisos.of(code)
-  }))
-  .filter(p => p.name) // elimina nulls
-  .sort((a, b) => a.name.localeCompare(b.name));
-
-// afegir opcions
-llista.forEach(pais => {
-  const option = document.createElement("option");
-  option.value = pais.name;
-  option.textContent = `${getFlagEmoji(pais.code)} ${pais.name}`;
-  paisSelect.appendChild(option);
-});
 
       // ===============================
       // CERCA ASSISTIDA CIF
@@ -697,6 +664,55 @@ telInput.addEventListener("input", () => {
   } else {
     telError.style.display = "block";
     telInput.style.border = "2px solid red";
+  }
+});
+
+const paisInput = document.getElementById("paisOrigen");
+const dropdown = document.getElementById("paisDropdown");
+
+const codis = Intl.supportedValuesOf('region');
+const paisos = new Intl.DisplayNames(['ca'], { type: 'region' });
+
+function flag(code) {
+  return code.replace(/./g, c => 
+    String.fromCodePoint(127397 + c.charCodeAt())
+  );
+}
+
+const llista = codis
+  .map(c => ({ code: c, name: paisos.of(c) }))
+  .filter(p => p.name)
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+// crear dropdown
+llista.forEach(p => {
+  const div = document.createElement("div");
+  div.style.padding = "8px";
+  div.style.cursor = "pointer";
+  div.textContent = `${flag(p.code)} ${p.name}`;
+
+  div.onclick = () => {
+    paisInput.value = p.name;
+    dropdown.style.display = "none";
+  };
+
+  dropdown.appendChild(div);
+});
+
+// obrir dropdown
+paisInput.addEventListener("click", () => {
+  dropdown.style.display = "block";
+
+  const rect = paisInput.getBoundingClientRect();
+  dropdown.style.top = rect.bottom + "px";
+  dropdown.style.left = rect.left + "px";
+  dropdown.style.width = rect.width + "px";
+});
+
+// tancar clic fora
+document.addEventListener("click", (e) => {
+  if (!paisInput.contains(e.target) && !dropdown.contains(e.target)) {
+    dropdown.style.display = "none";
   }
 });
 
