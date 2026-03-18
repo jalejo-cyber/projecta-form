@@ -128,7 +128,11 @@
         </div>
         <div class="row">
           <input name="nomSentit" placeholder="Nom sentit">
-          <input name="dni" placeholder="DNI" required>
+          <input id="dni" name="dni" placeholder="DNI / NIE" required maxlength="9">
+
+<span id="dniError" style="color:red; display:none; font-size:12px;">
+  El NIF introduït no és correcte
+</span>
         </div>
         <div class="row">
           <input type="date" name="dataNaixement" required>
@@ -470,7 +474,54 @@
           window.open(`https://www.google.com/search?q=${query}`, "_blank");
         });
       }
-    });
+   
+// ===============================
+// VALIDACIÓ DNI / NIE
+// ===============================
+const dniInput = document.getElementById("dni");
+const dniError = document.getElementById("dniError");
+
+if (dniInput) {
+  dniInput.addEventListener("input", () => {
+    const value = dniInput.value.toUpperCase().trim();
+
+    if (value.length === 9) {
+      if (!validarNIF(value)) {
+        dniError.style.display = "block";
+      } else {
+        dniError.style.display = "none";
+      }
+    } else {
+      dniError.style.display = "none";
+    }
+  });
+}
+
+function validarNIF(nif) {
+  const letras = "TRWAGMYFPDXBNJZSQVHLCKE";
+
+  // DNI
+  if (/^\d{8}[A-Z]$/.test(nif)) {
+    const numero = nif.slice(0, 8);
+    const letra = nif.slice(8);
+    return letras[numero % 23] === letra;
+  }
+
+  // NIE
+  if (/^[XYZ]\d{7}[A-Z]$/.test(nif)) {
+    let numero = nif
+      .replace("X", "0")
+      .replace("Y", "1")
+      .replace("Z", "2");
+
+    const letra = nif.slice(8);
+    return letras[numero.slice(0, 8) % 23] === letra;
+  }
+
+  return false;
+}
+     });
+      }
 
     // ===============================
     // POPUP
