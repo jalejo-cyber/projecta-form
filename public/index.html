@@ -666,55 +666,44 @@ telInput.addEventListener("input", () => {
     telInput.style.border = "2px solid red";
   }
 });
+// ===============================
+// PAÏSOS DEL MÓN (API OFICIAL)
+// ===============================
 
-const paisInput = document.getElementById("paisOrigen");
-const dropdown = document.getElementById("paisDropdown");
+const paisSelect = document.getElementById("paisOrigen");
 
-const codis = Intl.supportedValuesOf('region');
-const paisos = new Intl.DisplayNames(['ca'], { type: 'region' });
+// missatge inicial
+paisSelect.innerHTML = `<option value="" selected disabled>País d'origen</option>`;
 
-function flag(code) {
-  return code.replace(/./g, c => 
-    String.fromCodePoint(127397 + c.charCodeAt())
-  );
-}
+// carregar països
+fetch("https://restcountries.com/v3.1/all")
+  .then(res => res.json())
+  .then(data => {
 
-const llista = codis
-  .map(c => ({ code: c, name: paisos.of(c) }))
-  .filter(p => p.name)
-  .sort((a, b) => a.name.localeCompare(b.name));
+    // ordenar alfabèticament
+    data.sort((a, b) =>
+      a.name.common.localeCompare(b.name.common, "ca")
+    );
 
-// crear dropdown
-llista.forEach(p => {
-  const div = document.createElement("div");
-  div.style.padding = "8px";
-  div.style.cursor = "pointer";
-  div.textContent = `${flag(p.code)} ${p.name}`;
+    data.forEach(pais => {
+      const option = document.createElement("option");
 
-  div.onclick = () => {
-    paisInput.value = p.name;
-    dropdown.style.display = "none";
-  };
+      option.value = pais.name.common;
+      option.textContent = `${pais.flag} ${pais.name.common}`;
 
-  dropdown.appendChild(div);
-});
+      paisSelect.appendChild(option);
+    });
 
-// obrir dropdown
-paisInput.addEventListener("click", () => {
-  dropdown.style.display = "block";
+  })
+  .catch(error => {
+    console.error("Error carregant països:", error);
 
-  const rect = paisInput.getBoundingClientRect();
-  dropdown.style.top = rect.bottom + "px";
-  dropdown.style.left = rect.left + "px";
-  dropdown.style.width = rect.width + "px";
-});
+    // fallback (per si falla internet)
+    const option = document.createElement("option");
+    option.textContent = "No s'han pogut carregar els països";
+    paisSelect.appendChild(option);
+  });
 
-// tancar clic fora
-document.addEventListener("click", (e) => {
-  if (!paisInput.contains(e.target) && !dropdown.contains(e.target)) {
-    dropdown.style.display = "none";
-  }
-});
 
     // ===============================
     // POPUP
