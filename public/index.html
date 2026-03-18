@@ -57,16 +57,19 @@ cursor: pointer;
   position: relative;
 }
 
-/* FLETXA (igual que select) */
 .selected-country::after {
-  content: "▼";
-  font-size: 10px;
+  content: "";
   position: absolute;
-  right: 10px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #555;
-  pointer-events: none;
+
+  width: 0;
+  height: 0;
+
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #555; /* color fletxa */
 }
 
 /* dropdown */
