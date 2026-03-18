@@ -350,6 +350,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/intlTelInput.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js"></script>
   <script>
     /* ===============================
        LOADER (global) + bloqueig dobles enviaments
@@ -509,7 +510,11 @@ function validarNIF(nif) {
   const dniInput = document.getElementById("dni");
   const dniError = document.getElementById("dniError");
 
-  if (!dniInput || !dniError) return;
+  if (dniInput && dniError) {
+  dniInput.addEventListener("input", () => {
+    ...
+  });
+}
 
   dniInput.addEventListener("input", () => {
     const value = dniInput.value.toUpperCase().trim();
@@ -539,7 +544,6 @@ const iti = window.intlTelInput(telInput, {
   initialCountry: "es",
   preferredCountries: ["es", "fr", "it"],
   separateDialCode: true,
-  utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js"
 });
 
 // Guardem global per usar al submit
