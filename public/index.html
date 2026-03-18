@@ -45,6 +45,7 @@ cursor: pointer;
 }
 .custom-country {
   flex: 1;
+  position: relative;
 }
 
 .selected-country {
@@ -56,15 +57,10 @@ cursor: pointer;
 }
 
 .country-dropdown {
-  display: none;
   position: absolute;
   width: 100%;
-  background: white;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  max-height: 250px;
-  overflow-y: auto;
-  z-index: 999;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .country-dropdown input {
