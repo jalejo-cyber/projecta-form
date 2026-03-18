@@ -405,7 +405,7 @@
         try{
           const formData = new FormData(this);
           formData.append("signature", signaturePad.toDataURL());
-         const numeroSensePrefix = iti.getNumber().replace(/^\+\d+/, "");
+         const numeroSensePrefix = window.iti.getNumber().replace(/^\+\d+/, "");
 formData.set("telefon", numeroSensePrefix); 
 
           const res = await fetch("/api/send-form", {
@@ -528,7 +528,9 @@ function validarNIF(nif) {
     }
   });
 
-});
+// ===============================
+// TELÈFON INTERNACIONAL (FIX)
+// ===============================
 const telInput = document.getElementById("telefon");
 const telError = document.getElementById("telefonError");
 
@@ -539,6 +541,10 @@ const iti = window.intlTelInput(telInput, {
   utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js"
 });
 
+// Guardem global per usar al submit
+window.iti = iti;
+
+// Validació visual
 telInput.addEventListener("input", () => {
   if (iti.isValidNumber()) {
     telError.style.display = "none";
@@ -547,6 +553,7 @@ telInput.addEventListener("input", () => {
     telError.style.display = "block";
     telInput.style.border = "2px solid red";
   }
+});
 });
 
     // ===============================
@@ -571,6 +578,5 @@ telInput.addEventListener("input", () => {
       <button onclick="closePopup()">Acceptar</button>
     </div>
   </div>
-  <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/intlTelInput.min.js"></script>
 </body>
 </html>
