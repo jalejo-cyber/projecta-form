@@ -435,7 +435,7 @@ setInforme(["nif"], getVal("dni"));
 // ❗ TELÈFON → IMPORTANT (2 camps iguals)
 // 0 = entitat
 // 1 = persona orientada
-setInformeIndex(["telefon_persona"], getVal("telefon"));
+setInforme(["telefon_persona"], getVal("telefon"));
 
 // ✅ EMAIL (normalment no duplicat)
 setInforme(["correu"], getVal("email"));
