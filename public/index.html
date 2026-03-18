@@ -37,6 +37,12 @@ color: white;
 border-radius: 5px;
 cursor: pointer;
 }
+#paisOrigen {
+  background-repeat: no-repeat;
+  background-position: 10px center;
+  background-size: 20px;
+  padding-left: 40px;
+}
 .buscar-cif-btn{
 display:flex;
 align-items:center;
@@ -234,8 +240,12 @@ line-height:1.4;
         </div>
         <div class="row">
           <input type="date" name="dataNaixement" required>
-          <input name="paisOrigen" placeholder="País d'origen" required>
         </div>
+        <div class="row">
+  <select id="paisOrigen" name="paisOrigen" required>
+    <option value="" selected disabled>País d'origen</option>
+  </select>
+</div>
         <div class="row">
           <select name="genere" required>
             <option value="">Selecciona gènere</option>
@@ -563,6 +573,40 @@ formData.set("telefon", numeroSensePrefix);
         });
       }
 
+      const paisSelect = document.getElementById("paisOrigen");
+
+// tots els països ISO
+const codis = Intl.supportedValuesOf('region');
+
+// idioma català
+const paisos = new Intl.DisplayNames(['ca'], { type: 'region' });
+
+// funció bandera (emoji)
+function getFlagEmoji(countryCode) {
+  return countryCode
+    .toUpperCase()
+    .replace(/./g, char => 
+      String.fromCodePoint(127397 + char.charCodeAt())
+    );
+}
+
+// crear llista ordenada
+const llista = codis
+  .map(code => ({
+    code,
+    name: paisos.of(code)
+  }))
+  .filter(p => p.name) // elimina nulls
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+// afegir opcions
+llista.forEach(pais => {
+  const option = document.createElement("option");
+  option.value = pais.name;
+  option.textContent = `${getFlagEmoji(pais.code)} ${pais.name}`;
+  paisSelect.appendChild(option);
+});
+}
       // ===============================
       // CERCA ASSISTIDA CIF
       // ===============================
