@@ -37,49 +37,84 @@ color: white;
 border-radius: 5px;
 cursor: pointer;
 }
-#paisOrigen {
-  background-repeat: no-repeat;
-  background-position: 10px center;
-  background-size: 20px;
-  padding-left: 40px;
-}
+/* ===============================
+   SELECTOR PAÍS PRO (FIX COMPLET)
+   =============================== */
+
 .custom-country {
   flex: 1;
   position: relative;
 }
 
+/* camp visible (com select) */
 .selected-country {
   padding: 10px;
+  padding-right: 35px; /* espai per la fletxa */
   border: 1px solid #ccc;
   border-radius: 6px;
   cursor: pointer;
   background: white;
+  position: relative;
 }
 
-.country-dropdown {
+/* FLETXA (igual que select) */
+.selected-country::after {
+  content: "▼";
+  font-size: 10px;
   position: absolute;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #555;
+  pointer-events: none;
 }
 
+/* dropdown */
+.country-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+
+  width: 100%;
+  box-sizing: border-box;
+
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+
+  max-height: 250px;       /* 🔥 clau */
+  overflow-y: auto;        /* 🔥 scroll */
+
+  z-index: 9999;           /* 🔥 sobre tot */
+  margin-top: 4px;
+
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+/* buscador */
 .country-dropdown input {
   width: 100%;
   padding: 8px;
   border: none;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid #eee;
   outline: none;
+  font-size: 14px;
 }
 
+/* item */
 .country-item {
-  padding: 8px;
+  padding: 8px 10px;
   cursor: pointer;
   display: flex;
+  align-items: center;
   gap: 8px;
+  font-size: 14px;
 }
 
+/* hover */
 .country-item:hover {
-  background: #f2f2f2;
+  background: #f5f5f5;
 }
 .buscar-cif-btn{
 display:flex;
