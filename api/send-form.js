@@ -532,7 +532,7 @@ await transporter.sendMail({
   from: process.env.EMAIL_USER,
   to: getVal("email"),
   subject,
-  text: "Adjunt tens el teu document.",
+  text: "Gràcies per omplir el formulari! Et fem arribar el document d'inscripció al programa Projecta't. En breu el departament d'orientació es posarà en contacte amb tu per agendar la primera sessió. Fins aviat! ",
   attachments: annexOnly
 });
 
