@@ -156,7 +156,10 @@ export default async function handler(req, res) {
       "Correu electrònic participant",
       getVal("email")
     );
-    safeSetTextSmart("Telèfon", getVal("telefon"));
+   const telefonRaw = getVal("telefon");
+const telefonSensePrefix = telefonRaw.replace(/^\+\d{1,4}\s?/, "");
+
+safeSetTextSmart("Telèfon", telefonSensePrefix);
     safeSelectSmart("Gènere", getVal("genere"));
 
     // =====================================================
@@ -435,7 +438,10 @@ setInforme(["nif"], getVal("dni"));
 // ❗ TELÈFON → IMPORTANT (2 camps iguals)
 // 0 = entitat
 // 1 = persona orientada
-setInforme(["telefon_persona"], window.iti.getNumber());
+const telefonRaw = getVal("telefon");
+const telefonSensePrefix = telefonRaw.replace(/^\+\d{1,4}\s?/, "");
+
+setInforme(["telefon_persona"], telefonSensePrefix);
 
 // ✅ EMAIL (normalment no duplicat)
 setInforme(["correu"], getVal("email"));
