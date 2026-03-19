@@ -157,7 +157,7 @@ export default async function handler(req, res) {
       getVal("email")
     );
    const telefonRaw = getVal("telefon");
-const telefonSensePrefix = telefonRaw.replace(/^\+\d{1,4}\s?/, "");
+const telefonSensePrefix = telefonRaw.replace(/^\+34\s?/, "");
 
 safeSetTextSmart("Telèfon", telefonSensePrefix);
     safeSelectSmart("Gènere", getVal("genere"));
