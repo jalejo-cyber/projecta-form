@@ -438,8 +438,6 @@ setInforme(["nif"], getVal("dni"));
 // ❗ TELÈFON → IMPORTANT (2 camps iguals)
 // 0 = entitat
 // 1 = persona orientada
-const telefonRaw = getVal("telefon");
-const telefonSensePrefix = telefonRaw.replace(/^\+\d{1,4}\s?/, "");
 
 setInforme(["telefon_persona"], telefonSensePrefix);
 
